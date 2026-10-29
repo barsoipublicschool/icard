@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Attendance Scanner</title>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Html5-Qrcode Library -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f7f6;
+        text-align: center;
+        padding: 20px;
+        margin: 0;
+    }
+    h2 { color: #0f5132; }
+    #reader {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 3px solid #198754;
+        background: #fff;
+    }
+    .result-box {
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+    }
+</style>
+</head>
+<body>
+
+<h2>Barsoi Public School - Attendance Scanner</h2>
+<p>Apne ID Card ka QR Code camera ke samne layein</p>
+
+<div id="reader"></div>
+<div class="result-box" id="result">Camera initializing...</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyc4zx6o0oDrDogjKKM-jqBsQgCRIV2xVwGEKlkXSD-zbZef40FaLvaKnj0jCi37Cwg/exec"; // Apna Google Web App URL yahan paste karein
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // QR Code scan hone par data ko parse karein
+        try {
+            let studentObj = JSON.parse(decodedText);
+            
+            // Scanner ko thodi der ke liye pause karein taaki bar-bar scan na ho
+            html5QrcodeScanner.clear().then(_ => {
+                markAttendance(studentObj);
+            }).catch(error => {
+                console.error("Failed to clear scanner. ", error);
+            });
+
+        } catch (e) {
+            Swal.fire('Error', 'Invalid QR Code scanned!', 'error');
+            restartScanner();
+        }
+    }
+
+    function markAttendance(studentData) {
+        Swal.fire({
+            title: 'Saving Attendance...',
+            text: studentData.name,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        fetch(`${API_URL}?action=markAttendance&data=${encodeURIComponent(JSON.stringify(studentData))}`)
+            .then(res => res.json())
+            .then(response => {
+                if (response.status === "Success") {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Attendance Marked!',
+                        text: `${response.name} (Present)`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => { restartScanner(); });
+                } else if (response.status === "Already Marked") {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Already Marked!',
+                        text: `${response.name} ki attendance aaj pehle hi lag chuki hai.`,
+                        timer: 2500,
+                        showConfirmButton: false
+                    }).then(() => { restartScanner(); });
+                } else {
+                    Swal.fire('Error', 'Kuch gadbad ho gayi!', 'error').then(() => { restartScanner(); });
+                }
+            })
+            .catch(err => {
+                Swal.fire('Error', 'Server se connection nahi ho paya', 'error').then(() => { restartScanner(); });
+            });
+    }
+
+    let html5QrcodeScanner;
+    function restartScanner() {
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", { fps: 10, qrbox: 250 }
+        );
+        html5QrcodeScanner.render(onScanSuccess);
+    }
+
+    // Start Scanner on Load
+    document.addEventListener("DOMContentLoaded", () => {
+        restartScanner();
+    });
+</script>
+
+</body>
+</html>
