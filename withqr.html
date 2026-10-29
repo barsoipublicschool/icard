@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student ID Card - Barsoi Public School</title>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- QRCode JS Library for Attendance QR Code -->
+<!-- QRCode JS Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
     body {
@@ -64,7 +64,6 @@
         border-radius: 5px;
     }
 
-    /* Card Wrapper (Front + Back) */
     .cards-container {
         display: none;
         flex-wrap: wrap;
@@ -73,7 +72,6 @@
         align-items: center;
     }
 
-    /* ID Card Horizontal Canvas (CR-80 Ratio) */
     .id-card {
         width: 500px;
         height: 310px;
@@ -86,7 +84,7 @@
         box-sizing: border-box;
     }
 
-    /* FRONT SIDE STYLES */
+    /* FRONT SIDE */
     .header {
         background: linear-gradient(135deg, #0f5132, #198754) !important;
         color: #ffffff !important;
@@ -95,7 +93,6 @@
         border-bottom-left-radius: 50% 12px;
         border-bottom-right-radius: 50% 12px;
         position: relative;
-        -webkit-print-color-adjust: exact !important;
     }
 
     .school-title {
@@ -119,7 +116,6 @@
         margin-top: 2px;
         text-transform: uppercase;
         letter-spacing: 1px;
-        -webkit-print-color-adjust: exact !important;
     }
 
     .logo-img {
@@ -157,7 +153,6 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        -webkit-print-color-adjust: exact !important;
     }
 
     .student-photo {
@@ -209,7 +204,6 @@
         font-size: 15px;
         font-weight: 800;
         font-style: italic;
-        -webkit-print-color-adjust: exact !important;
     }
 
     .footer {
@@ -226,20 +220,18 @@
         border-top-left-radius: 50% 10px;
         border-top-right-radius: 50% 10px;
         box-sizing: border-box;
-        -webkit-print-color-adjust: exact !important;
     }
 
-    /* BACK SIDE STYLES (Matching Image 2 Layout with Image 1 Green Theme) */
+    /* BACK SIDE */
     .id-card-back {
         background: #eef7f2 !important;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        padding: 12px 18px;
+        padding: 10px 15px;
         position: relative;
     }
 
-    /* Geometric Background Patterns like Image 2 */
     .bg-shape-1 {
         position: absolute;
         top: -40px;
@@ -278,11 +270,11 @@
         align-items: center;
         justify-content: space-between;
         border-bottom: 2px solid #198754;
-        padding-bottom: 6px;
+        padding-bottom: 4px;
     }
 
     .back-brand-name {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 800;
         color: #0f5132;
         text-transform: uppercase;
@@ -292,42 +284,49 @@
     .back-main {
         display: flex;
         align-items: center;
-        justify-content: space-around;
-        margin: 5px 0;
+        justify-content: space-between;
+        margin: 2px 0;
+        padding: 0 10px;
     }
 
     .student-summary {
-        text-align: center;
+        text-align: left;
+        max-width: 240px;
     }
 
     .student-summary .s-name {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 800;
         color: #0f5132;
         text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .student-summary .s-id {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
         color: #198754;
-        margin-top: 2px;
+        margin-top: 1px;
     }
 
     .qr-wrapper {
         background: #fff;
-        padding: 6px;
-        border-radius: 8px;
+        padding: 4px;
+        border-radius: 6px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         border: 1px solid #198754;
-        display: inline-block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .dates-container {
         display: flex;
         justify-content: space-around;
         background: #ffffff;
-        padding: 5px 10px;
+        padding: 4px 8px;
         border-radius: 6px;
         border: 1px dashed #198754;
         font-size: 11px;
@@ -340,25 +339,25 @@
     }
 
     .terms-box {
-        font-size: 9.5px;
+        font-size: 9px;
         color: #444;
-        line-height: 1.35;
-        background: rgba(255, 255, 255, 0.7);
-        padding: 6px 8px;
+        line-height: 1.3;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 5px 8px;
         border-radius: 5px;
     }
 
     .terms-title {
         font-weight: bold;
         color: #0f5132;
-        margin-bottom: 2px;
-        font-size: 10px;
+        margin-bottom: 1px;
+        font-size: 9.5px;
         text-transform: uppercase;
     }
 
     .terms-list {
         margin: 0;
-        padding-left: 14px;
+        padding-left: 12px;
     }
 
     .btn-group { margin-top: 20px; display: flex; gap: 10px; }
@@ -370,7 +369,6 @@
         * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            color-adjust: exact !important;
         }
         body { background: #fff !important; padding: 0 !important; }
         #search-box, .btn-group { display: none !important; }
@@ -470,7 +468,7 @@
         </div>
     </div>
 
-    <!-- BACK SIDE (Styling & Layout like Image 2, Colors like Image 1) -->
+    <!-- BACK SIDE -->
     <div id="idCardBack" class="id-card id-card-back">
         <div class="bg-shape-1"></div>
         <div class="bg-shape-2"></div>
@@ -487,7 +485,7 @@
                     <div class="s-id" id="back-card-id">ID: BPS-000</div>
                 </div>
 
-                <!-- QR Code Element for Attendance System -->
+                <!-- Bada QR Code for Attendance -->
                 <div class="qr-wrapper">
                     <div id="qrcode"></div>
                 </div>
@@ -499,12 +497,12 @@
                 <div>Expire Date: <span id="card-expire">-</span></div>
             </div>
 
-            <!-- Terms & Instructions in English -->
+            <!-- Terms & Instructions -->
             <div class="terms-box">
                 <div class="terms-title">Instructions / Terms & Conditions:</div>
                 <ul class="terms-list">
-                    <li>Students must wear this card inside the school campus at all times.</li>
-                    <li>This card is non-transferable and must be presented for attendance.</li>
+                    <li>Students must wear this identity card inside the school campus at all times.</li>
+                    <li>This card is non-transferable and must be presented for automated attendance.</li>
                     <li>If found, please return to Barsoi Public School, Katihar, Bihar.</li>
                 </ul>
             </div>
@@ -519,7 +517,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbw1i5skNGKbUYor9bbOKqWwkTKjGRIMGTURpekdsiRkdX-qxhO9FngH-lWyUWKq49LXrw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxc9Ywb-pbJpPEtbKoWSshUn4lj459MD_dCiXgvMKZG1i7G--LWqPfj59_mnTD-RmkO/exec";
 
     window.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
@@ -545,14 +543,12 @@
 
     function formatDate(rawDate) {
         if (!rawDate) return "-";
-        if (typeof rawDate === 'string' && rawDate.includes("T")) {
-            const d = new Date(rawDate);
-            if (!isNaN(d.getTime())) {
-                const day = String(d.getDate()).padStart(2, '0');
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const year = d.getFullYear();
-                return `${day}-${month}-${year}`;
-            }
+        const d = new Date(rawDate);
+        if (!isNaN(d.getTime())) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}-${month}-${year}`;
         }
         return rawDate;
     }
@@ -575,7 +571,7 @@
                     return Swal.fire('Error', 'Student record not found in All Students sheet!', 'error');
                 }
 
-                // Dynamic Front Fields
+                // Front Side Fields
                 const studentId = getSafeVal(d.regNo, "BPS-" + roll);
                 const studentName = getSafeVal(d.name);
 
@@ -585,7 +581,7 @@
                 document.getElementById('card-class').innerText = getSafeVal(d.class, cls);
                 document.getElementById('card-roll').innerText = getSafeVal(d.rollNo, roll);
                 
-                document.getElementById('card-dob').innerText = formatDate(getSafeVal(d.dob));
+                document.getElementById('card-dob').innerText = formatDate(d.dob);
                 document.getElementById('card-blood').innerText = getSafeVal(d.bloodGroup, "N/A");
                 document.getElementById('card-address').innerText = getSafeVal(d.address, "Barsoi, Katihar");
                 document.getElementById('card-mobile').innerText = getSafeVal(d.mobile, "-");
@@ -593,13 +589,13 @@
                 const photoVal = getSafeVal(d.photo, "");
                 document.getElementById('card-photo').src = photoVal !== "-" && photoVal !== "" ? photoVal : "https://via.placeholder.com/110x125?text=No+Photo";
                 
-                // Dynamic Back Fields
+                // Back Side Fields
                 document.getElementById('back-card-name').innerText = studentName;
                 document.getElementById('back-card-id').innerText = "ID: " + studentId;
-                document.getElementById('card-join').innerText = formatDate(getSafeVal(d.joinDate));
-                document.getElementById('card-expire').innerText = formatDate(getSafeVal(d.expireDate));
+                document.getElementById('card-join').innerText = formatDate(d.joinDate);
+                document.getElementById('card-expire').innerText = formatDate(d.expireDate);
 
-                // Generate Dynamic Attendance QR Code
+                // Large Attendance QR Code Generation (Size increased to 115x115)
                 document.getElementById('qrcode').innerHTML = "";
                 const attendanceData = JSON.stringify({
                     id: studentId,
@@ -610,14 +606,14 @@
 
                 new QRCode(document.getElementById("qrcode"), {
                     text: attendanceData,
-                    width: 90,
-                    height: 90,
+                    width: 115,
+                    height: 115,
                     colorDark : "#0f5132",
                     colorLight : "#ffffff",
                     correctLevel : QRCode.CorrectLevel.H
                 });
 
-                // UI Toggle
+                // Show UI
                 document.getElementById('search-box').style.display = 'none';
                 document.getElementById('cardsContainer').style.display = 'flex';
                 document.getElementById('btnGroup').style.display = 'flex';
