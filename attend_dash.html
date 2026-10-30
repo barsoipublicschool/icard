@@ -37,6 +37,14 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         margin-top: -30px;
     }
+    .tracker-card {
+        background: #eef7f2;
+        border: 1px solid #198754;
+        border-radius: 15px;
+        padding: 18px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
     .table-card {
         background: white;
         border-radius: 15px;
@@ -67,26 +75,48 @@
 </div>
 
 <div class="container mb-5">
-    <!-- Filter Bar -->
+    <!-- Main Filter Bar -->
     <div class="filter-card mb-4">
         <div class="row g-3 align-items-end">
             <div class="col-md-3">
-                <label class="form-label fw-bold"><i class="fa-solid fa-layer-group me-1 text-success"></i> Class</label>
-                <select id="classFilter" class="form-select">
+                <label class="form-label fw-bold text-success"><i class="fa-solid fa-layer-group me-1"></i> Class</label>
+                <select id="classFilter" class="form-select" onchange="applyFilter()">
                     <option value="">All Classes</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label fw-bold"><i class="fa-regular fa-calendar-days me-1 text-success"></i> Date</label>
-                <input type="date" id="dateFilter" class="form-control">
+                <label class="form-label fw-bold text-success"><i class="fa-regular fa-calendar-days me-1"></i> Date</label>
+                <input type="date" id="dateFilter" class="form-control" onchange="applyFilter()">
             </div>
             <div class="col-md-4">
-                <label class="form-label fw-bold"><i class="fa-solid fa-magnifying-glass me-1 text-success"></i> Student Search</label>
-                <input type="text" id="searchInput" class="form-control" placeholder="Enter Name, ID, or Roll No...">
+                <label class="form-label fw-bold text-success"><i class="fa-solid fa-magnifying-glass me-1"></i> Student Search</label>
+                <input type="text" id="searchInput" class="form-control" placeholder="Enter Name, ID, or Roll No..." onkeyup="applyFilter()">
             </div>
             <div class="col-md-2">
-                <button class="btn btn-success w-100 fw-bold py-2" onclick="applyFilter()">
-                    <i class="fa-solid fa-filter me-1"></i> Search
+                <button class="btn btn-outline-secondary w-100 fw-bold py-2" onclick="resetFilters()">
+                    <i class="fa-solid fa-rotate-right me-1"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Individual Student Tracker Section (Newly Added) -->
+    <div class="tracker-card">
+        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-user-shield me-2"></i>Individual Student Attendance Tracker</h6>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold small">Select Class</label>
+                <select id="trackerClass" class="form-select form-select-sm">
+                    <option value="">Choose Class</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Student Name / ID / Roll No</label>
+                <input type="text" id="trackerStudent" class="form-control form-control-sm" placeholder="Type student name or ID to track...">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-sm w-100 fw-bold" onclick="trackIndividualStudent()">
+                    <i class="fa-solid fa-chart-line me-1"></i> Track
                 </button>
             </div>
         </div>
@@ -98,7 +128,7 @@
             <div class="card card-stat bg-green-1 p-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-1 text-uppercase opacity-75">Total Attendance Recorded</h6>
+                        <h6 class="mb-1 text-uppercase opacity-75">Today's Attendance</h6>
                         <h2 class="fw-bold mb-0" id="totalCount">0</h2>
                     </div>
                     <i class="fa-solid fa-clipboard-user fa-2x opacity-50"></i>
@@ -132,8 +162,7 @@
     <!-- Data Table -->
     <div class="table-card">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold text-success mb-0"><i class="fa-solid fa-list me-2"></i>Attendance Report</h5>
-            <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()"><i class="fa-solid fa-rotate-right me-1"></i> Reset</button>
+            <h5 class="fw-bold text-success mb-0" id="tableTitle"><i class="fa-solid fa-list me-2"></i>Attendance Report (Today)</h5>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle">
@@ -156,10 +185,17 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwcqbMH6wEW3isFRMiMsPiebUL4_uALKBXy-7elBKpjs0XolIySjq5mO_-KsuSGHAVUKA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyGWjqCXoYfq4Xo4zsHiEJa7hVc7v2vuLhmtfw6FjwMm9zyWmmliC2bB9acG7h1FcNI/exec";
     let rawRecords = [];
 
     window.addEventListener('DOMContentLoaded', () => {
+        // Default date set to Today (YYYY-MM-DD)
+        const todayObj = new Date();
+        const yyyy = todayObj.getFullYear();
+        const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(todayObj.getDate()).padStart(2, '0');
+        document.getElementById('dateFilter').value = `${yyyy}-${mm}-${dd}`;
+
         loadDashboardData();
     });
 
@@ -170,17 +206,19 @@
                 if (data && data.records) {
                     rawRecords = data.records;
                     
-                    // Populate Class Dropdown
+                    // Populate Class Dropdowns
                     const classSelect = document.getElementById('classFilter');
+                    const trackerClassSelect = document.getElementById('trackerClass');
                     classSelect.innerHTML = '<option value="">All Classes</option>';
+                    trackerClassSelect.innerHTML = '<option value="">Choose Class</option>';
+
                     data.classList.forEach(cls => {
                         classSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
+                        trackerClassSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
                     });
 
                     document.getElementById('activeClasses').innerText = data.classList.length;
-                    document.getElementById('totalCount').innerText = rawRecords.length;
-
-                    renderTable(rawRecords);
+                    applyFilter(); // Initial filter apply for today's date
                 }
             })
             .catch(err => {
@@ -188,9 +226,10 @@
             });
     }
 
-    function renderTable(dataList) {
+    function renderTable(dataList, titleText = "Attendance Report") {
         const tbody = document.getElementById('tableBody');
         document.getElementById('presentCount').innerText = dataList.length;
+        document.getElementById('tableTitle').innerHTML = `<i class="fa-solid fa-list me-2"></i>${titleText} (${dataList.length} records)`;
 
         if (dataList.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No attendance logs found matching filters.</td></tr>`;
@@ -236,14 +275,49 @@
             return matchClass && matchDate && matchQuery;
         });
 
-        renderTable(filtered);
+        // Today's total count for stat card
+        const todayObj = new Date();
+        const todayStr = `${String(todayObj.getDate()).padStart(2, '0')}/${String(todayObj.getMonth() + 1).padStart(2, '0')}/${todayObj.getFullYear()}`;
+        const todaysTotal = rawRecords.filter(r => String(r.date).trim() === todayStr).length;
+        document.getElementById('totalCount').innerText = todaysTotal;
+
+        renderTable(filtered, "Attendance Report");
+    }
+
+    function trackIndividualStudent() {
+        const cls = document.getElementById('trackerClass').value.toLowerCase().trim();
+        const studentQuery = document.getElementById('trackerStudent').value.toLowerCase().trim();
+
+        if (!cls && !studentQuery) {
+            Swal.fire('Warning', 'Kripya Class aur Student ka naam/ID darj karein!', 'warning');
+            return;
+        }
+
+        const filtered = rawRecords.filter(r => {
+            const matchClass = !cls || String(r.className).toLowerCase().trim() === cls;
+            const matchStudent = !studentQuery || 
+                String(r.name).toLowerCase().includes(studentQuery) || 
+                String(r.studentId).toLowerCase().includes(studentQuery) || 
+                String(r.rollNo).toLowerCase().includes(studentQuery);
+
+            return matchClass && matchStudent;
+        });
+
+        renderTable(filtered, `Tracking Result for "${document.getElementById('trackerStudent').value}"`);
     }
 
     function resetFilters() {
+        const todayObj = new Date();
+        const yyyy = todayObj.getFullYear();
+        const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(todayObj.getDate()).padStart(2, '0');
+        document.getElementById('dateFilter').value = `${yyyy}-${mm}-${dd}`;
+
         document.getElementById('classFilter').value = '';
-        document.getElementById('dateFilter').value = '';
         document.getElementById('searchInput').value = '';
-        renderTable(rawRecords);
+        document.getElementById('trackerClass').value = '';
+        document.getElementById('trackerStudent').value = '';
+        applyFilter();
     }
 </script>
 </body>
