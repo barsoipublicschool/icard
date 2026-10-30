@@ -35,6 +35,8 @@
         gap: 15px;
         align-items: center;
         margin-bottom: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     #controls input {
@@ -82,6 +84,7 @@
         page-break-inside: avoid;
     }
 
+    /* FRONT SIDE */
     .id-card {
         width: 480px;
         height: 300px;
@@ -200,6 +203,7 @@
         border-top-right-radius: 50% 10px;
     }
 
+    /* BACK SIDE */
     .id-card-back {
         background: #eef7f2 !important;
         display: flex;
@@ -271,15 +275,23 @@
 <body>
 
 <div id="controls">
-    <label><b>Enter Class Name:</b></label>
-    <input type="text" id="clsInput" placeholder="e.g. 8th">
-    <button class="btn btn-generate" onclick="generateBulkCards()">Fetch All ID Cards</button>
+    <label><b>Class:</b></label>
+    <input type="text" id="clsInput" placeholder="e.g. 8th" style="width: 80px;">
+    
+    <label><b>Start Roll:</b></label>
+    <input type="number" id="startRoll" value="1" style="width: 70px;">
+    
+    <label><b>End Roll:</b></label>
+    <input type="number" id="endRoll" value="30" style="width: 70px;">
+
+    <button class="btn btn-generate" onclick="generateBulkCards()">Fetch Bulk ID Cards</button>
     <button class="btn btn-print" id="btnPrint" onclick="window.print()">Print A4 Landscape</button>
 </div>
 
 <div id="pagesContainer"></div>
 
 <script>
+    // Exact Web App URL from your index.html
     const API_URL = "https://script.google.com/macros/s/AKfycbyc4zx6o0oDrDogjKKM-jqBsQgCRIV2xVwGEKlkXSD-zbZef40FaLvaKnj0jCi37Cwg/exec";
 
     function formatDate(rawDate) {
@@ -301,71 +313,48 @@
         return String(val).trim();
     }
 
-    function generateBulkCards() {
+    async function generateBulkCards() {
         const cls = document.getElementById('clsInput').value.trim();
-        if (!cls) return Swal.fire('Warning', 'Please enter class name (e.g. 8th)!', 'warning');
+        const startRoll = parseInt(document.getElementById('startRoll').value);
+        const endRoll = parseInt(document.getElementById('endRoll').value);
 
-        Swal.fire({ title: 'Loading Class Data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        if (!cls) return Swal.fire('Warning', 'Please enter Class (e.g. 8th)!', 'warning');
+        if (isNaN(startRoll) || isNaN(endRoll) || startRoll > endRoll) {
+            return Swal.fire('Warning', 'Please enter valid Start and End Roll No!', 'warning');
+        }
 
-        // Kyunki hum code.gs nahi badal rahe, hum existing `getAttendanceDashboard` se saare records fetch karke selected class ke students filter kar lenge
-        fetch(`${API_URL}?action=getAttendanceDashboard`)
-            .then(res => res.json())
-            .then(data => {
-                Swal.close();
-                if (!data || !data.records) {
-                    return Swal.fire('Error', 'Failed to fetch records from server', 'error');
-                }
+        Swal.fire({
+            title: 'Fetching ID Cards...',
+            text: `Please wait, loading records from Roll ${startRoll} to ${endRoll}`,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
 
-                // Selected class ke students filter karein (records se unique students nikal kar)
-                const studentMap = new Map();
-                data.records.forEach(r => {
-                    if (String(r.className).toLowerCase().trim() === cls.toLowerCase()) {
-                        const key = r.rollNo || r.name;
-                        if (!studentMap.has(key)) {
-                            studentMap.set(key, {
-                                rollNo: r.rollNo,
-                                regNo: r.studentId,
-                                class: r.className,
-                                section: r.section,
-                                name: r.name,
-                                father: r.father || "-",
-                                mother: r.mother || "-",
-                                dob: r.dob || "-",
-                                address: r.address || "Barsoi, Katihar",
-                                mobile: r.mobile || "-",
-                                photo: r.photo || "",
-                                bloodGroup: r.bloodGroup || "N/A",
-                                joinDate: r.joinDate || "-",
-                                expireDate: r.expireDate || "-"
-                            });
-                        }
-                    }
-                });
+        const container = document.getElementById('pagesContainer');
+        container.innerHTML = '';
 
-                const students = Array.from(studentMap.values());
+        let pageDiv = document.createElement('div');
+        pageDiv.className = 'a4-page';
+        let foundCount = 0;
 
-                if (students.length === 0) {
-                    return Swal.fire('No Data', 'No students found for this class in attendance logs!', 'info');
-                }
+        // Fetch each student using action=getIdCardData (Same logic as index.html)
+        for (let roll = startRoll; roll <= endRoll; roll++) {
+            try {
+                const res = await fetch(`${API_URL}?action=getIdCardData&rollNo=${roll}&className=${encodeURIComponent(cls)}`);
+                const d = await res.json();
 
-                const container = document.getElementById('pagesContainer');
-                container.innerHTML = '';
-
-                let pageDiv = document.createElement('div');
-                pageDiv.className = 'a4-page';
-
-                students.forEach((s, index) => {
-                    if (index > 0 && index % 2 === 0) {
+                if (d && d !== "Not Found" && d !== "Invalid Action" && typeof d === 'object') {
+                    if (foundCount > 0 && foundCount % 2 === 0) {
                         container.appendChild(pageDiv);
                         pageDiv = document.createElement('div');
                         pageDiv.className = 'a4-page';
                     }
 
-                    const studentId = getSafeVal(s.regNo, "BPS-" + s.rollNo);
-                    const studentName = getSafeVal(s.name);
-                    const photoVal = getSafeVal(s.photo, "");
+                    const studentId = getSafeVal(d.regNo, "BPS-" + roll);
+                    const studentName = getSafeVal(d.name);
+                    const photoVal = getSafeVal(d.photo, "");
                     const photoUrl = photoVal !== "-" && photoVal !== "" ? photoVal : "https://via.placeholder.com/100x115?text=No+Photo";
-                    const qrId = `qrcode_${index}`;
+                    const qrId = `qrcode_${foundCount}`;
 
                     const cardPairHTML = `
                         <div class="student-card-pair">
@@ -384,12 +373,12 @@
                                     <div class="right-section">
                                         <table class="details-table">
                                             <tr><td class="label">Name</td><td class="colon">:</td><td class="value highlight-name">${studentName}</td></tr>
-                                            <tr><td class="label">Father's Name</td><td class="colon">:</td><td class="value">${getSafeVal(s.father)}</td></tr>
-                                            <tr><td class="label">Class & Roll</td><td class="colon">:</td><td class="value"><span style="font-weight:bold;">${getSafeVal(s.class, cls)}</span> | Roll: <span style="font-weight:bold;">${getSafeVal(s.rollNo)}</span></td></tr>
-                                            <tr><td class="label">Date of Birth</td><td class="colon">:</td><td class="value">${formatDate(s.dob)}</td></tr>
-                                            <tr><td class="label">Blood Group</td><td class="colon">:</td><td class="value">${getSafeVal(s.bloodGroup, "N/A")}</td></tr>
-                                            <tr><td class="label">Address</td><td class="colon">:</td><td class="value">${getSafeVal(s.address, "Barsoi, Katihar")}</td></tr>
-                                            <tr><td class="label">Mobile No.</td><td class="colon">:</td><td class="value">${getSafeVal(s.mobile)}</td></tr>
+                                            <tr><td class="label">Father's Name</td><td class="colon">:</td><td class="value">${getSafeVal(d.father)}</td></tr>
+                                            <tr><td class="label">Class & Roll</td><td class="colon">:</td><td class="value"><span style="font-weight:bold;">${getSafeVal(d.class, cls)}</span> | Roll: <span style="font-weight:bold;">${getSafeVal(d.rollNo, roll)}</span></td></tr>
+                                            <tr><td class="label">Date of Birth</td><td class="colon">:</td><td class="value">${formatDate(d.dob)}</td></tr>
+                                            <tr><td class="label">Blood Group</td><td class="colon">:</td><td class="value">${getSafeVal(d.bloodGroup, "N/A")}</td></tr>
+                                            <tr><td class="label">Address</td><td class="colon">:</td><td class="value">${getSafeVal(d.address, "Barsoi, Katihar")}</td></tr>
+                                            <tr><td class="label">Mobile No.</td><td class="colon">:</td><td class="value">${getSafeVal(d.mobile)}</td></tr>
                                         </table>
                                     </div>
                                 </div>
@@ -415,8 +404,8 @@
                                         </div>
                                     </div>
                                     <div class="dates-container">
-                                        <div>Join Date: <span>${formatDate(s.joinDate)}</span></div>
-                                        <div>Expire Date: <span>${formatDate(s.expireDate)}</span></div>
+                                        <div>Join Date: <span>${formatDate(d.joinDate)}</span></div>
+                                        <div>Expire Date: <span>${formatDate(d.expireDate)}</span></div>
                                     </div>
                                     <div class="terms-box">
                                         <div class="terms-title">Instructions / Terms & Conditions:</div>
@@ -436,8 +425,8 @@
                     setTimeout(() => {
                         const attendanceData = JSON.stringify({
                             id: studentId,
-                            roll: getSafeVal(s.rollNo),
-                            class: getSafeVal(s.class, cls),
+                            roll: getSafeVal(d.rollNo, roll),
+                            class: getSafeVal(d.class, cls),
                             name: studentName
                         });
 
@@ -449,13 +438,23 @@
                             colorLight : "#ffffff",
                             correctLevel : QRCode.CorrectLevel.H
                         });
-                    }, 100);
-                });
+                    }, 50);
 
-                container.appendChild(pageDiv);
-                document.getElementById('btnPrint').style.display = 'inline-block';
-            })
-            .catch(() => Swal.fire('Error', 'Failed to fetch data', 'error'));
+                    foundCount++;
+                }
+            } catch (err) {
+                console.log(`Roll ${roll} fetch error`);
+            }
+        }
+
+        Swal.close();
+
+        if (foundCount === 0) {
+            Swal.fire('No Data Found', 'Given Roll range mein koi students record nahi mila!', 'info');
+        } else {
+            container.appendChild(pageDiv);
+            document.getElementById('btnPrint').style.display = 'inline-block';
+        }
     }
 </script>
 </body>
