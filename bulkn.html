@@ -130,15 +130,15 @@
         text-transform: uppercase;
     }
 
-        .logo-img {
+    .logo-img {
         position: absolute;
         left: 6px;
         top: 4px;
         width: 32px;
         height: 32px;
         object-fit: contain;
-        background: transparent !important; /* Background transparent kar diya */
-        border: none !important; /* Border hata diya */
+        background: transparent !important;
+        border: none !important;
         box-shadow: none !important;
     }
 
@@ -191,6 +191,31 @@
     .colon { width: 4%; font-weight: bold; color: #198754 !important; }
     .value { font-weight: 600; color: #111; width: 62%; }
     .highlight-name { color: #0f5132 !important; font-size: 10px; font-weight: 800; font-style: italic; }
+
+    /* Principal Signature Styles */
+    .principal-sign-container {
+        position: absolute;
+        right: 8px;
+        bottom: 15px;
+        text-align: center;
+    }
+
+    .sign-img {
+        height: 18px;
+        max-width: 65px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto 1px auto;
+    }
+
+    .sign-label {
+        font-size: 6.5px;
+        font-weight: bold;
+        color: #0f5132;
+        text-transform: uppercase;
+        border-top: 1px solid #0f5132;
+        padding-top: 1px;
+    }
 
     .footer {
         position: absolute;
@@ -250,6 +275,7 @@
     .qr-wrapper {
         background: #fff; padding: 2px; border-radius: 4px;
         border: 1px solid #198754; display: flex; align-items: center; justify-content: center;
+        width: 76px; height: 76px;
     }
 
     .dates-container {
@@ -394,6 +420,11 @@
                                             <tr><td class="label">Mobile No.</td><td class="colon">:</td><td class="value">${getSafeVal(d.mobile)}</td></tr>
                                         </table>
                                     </div>
+                                </div>
+                                <!-- Principal Signature Section Added Here -->
+                                <div class="principal-sign-container">
+                                    <img src="https://drive.google.com/thumbnail?id=1JwgXbgsbPzZ2z2indNOZWOK-PWwaQvqN" class="sign-img">
+                                    <div class="sign-label">Principal's Sign</div>
                                 </div>
                                 <div class="footer">NIHAR NAGAR BLOCK ROAD, BARSOI, KATIHAR, BIHAR</div>
                             </div>
