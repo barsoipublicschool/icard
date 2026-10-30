@@ -86,7 +86,7 @@
         page-break-inside: avoid;
     }
 
-    /* FRONT SIDE (Scaled down slightly to fit 5 cards vertically in A4 Portrait) */
+    /* FRONT SIDE */
     .id-card {
         width: 90mm;
         height: 52mm;
@@ -337,6 +337,7 @@
         let pageDiv = document.createElement('div');
         pageDiv.className = 'a4-page';
         let foundCount = 0;
+        let cardsOnCurrentPage = 0;
 
         for (let roll = startRoll; roll <= endRoll; roll++) {
             try {
@@ -344,10 +345,11 @@
                 const d = await res.json();
 
                 if (d && d !== "Not Found" && d !== "Invalid Action" && typeof d === 'object') {
-                    if (foundCount > 0 && foundCount % 5 === 0) { // Exactly 5 ID cards per page in Portrait mode
+                    if (cardsOnCurrentPage === 5) {
                         container.appendChild(pageDiv);
                         pageDiv = document.createElement('div');
                         pageDiv.className = 'a4-page';
+                        cardsOnCurrentPage = 0;
                     }
 
                     const studentId = getSafeVal(d.regNo, "BPS-" + roll);
@@ -440,6 +442,7 @@
                         });
                     }, 50);
 
+                    cardsOnCurrentPage++;
                     foundCount++;
                 }
             } catch (err) {
@@ -452,8 +455,9 @@
         if (foundCount === 0) {
             Swal.fire('No Data Found', 'Given Roll range mein koi students record nahi mila!', 'info');
         } else {
-            container.appendChild(pagesContainer ? ... : pageDiv);
-            document.getElementById('pagesContainer').appendChild(pageDiv);
+            if (cardsOnCurrentPage > 0) {
+                container.appendChild(pageDiv);
+            }
             document.getElementById('btnPrint').style.display = 'inline-block';
         }
     }
