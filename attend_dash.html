@@ -3,233 +3,248 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Attendance Dashboard - Barsoi Public School</title>
+<title>Attendance Tracking Dashboard - Barsoi Public School</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     body {
-        font-family: 'Segoe UI', Arial, sans-serif;
-        background-color: #f4f7f6;
-        margin: 0;
-        padding: 20px;
-        color: #333;
+        background-color: #f0f4f8;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    .container {
-        max-width: 1000px;
-        margin: 0 auto;
-        background: #fff;
-        padding: 25px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    h2 {
-        color: #0f5132;
-        text-align: center;
-        margin-top: 0;
-    }
-    .filter-section {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        background: #eef7f2;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #198754;
-    }
-    .filter-box {
-        flex: 1;
-        min-width: 200px;
-        display: flex;
-        flex-direction: column;
-    }
-    .filter-box label {
-        font-size: 12px;
-        font-weight: bold;
-        color: #0f5132;
-        margin-bottom: 5px;
-    }
-    .filter-box select, .filter-box input {
-        padding: 8px 12px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        outline: none;
-        font-size: 14px;
-    }
-    .stats-card {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-    .stat-box {
-        flex: 1;
-        background: #198754;
+    .header-banner {
+        background: linear-gradient(135deg, #0f5132, #198754);
         color: white;
-        padding: 15px;
-        border-radius: 8px;
-        text-align: center;
+        padding: 25px 20px;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
-    .stat-box h3 { margin: 0; font-size: 24px; }
-    .stat-box p { margin: 5px 0 0; font-size: 13px; opacity: 0.9; }
+    .card-stat {
+        border: none;
+        border-radius: 12px;
+        color: white;
+        transition: transform 0.2s;
+    }
+    .card-stat:hover { transform: translateY(-3px); }
+    .bg-green-1 { background: linear-gradient(135deg, #198754, #0f5132); }
+    .bg-green-2 { background: linear-gradient(135deg, #20c997, #0f5132); }
+    .bg-green-3 { background: linear-gradient(135deg, #ffc107, #d97706); color: #000 !important; }
     
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
+    .filter-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-top: -30px;
     }
-    th, td {
-        padding: 10px 12px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-        font-size: 13.5px;
+    .table-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    th {
-        background-color: #0f5132;
-        color: white;
-    }
-    tr:hover { background-color: #f9f9f9; }
-    .badge {
-        background: #d1e7dd;
+    .badge-present {
+        background-color: #d1e7dd;
         color: #0f5132;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-weight: bold;
-        font-size: 11px;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 20px;
+    }
+    .badge-absent {
+        background-color: #f8d7da;
+        color: #842029;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 20px;
     }
 </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Barsoi Public School - Attendance Dashboard</h2>
+<div class="header-banner text-center">
+    <h2><i class="fa-solid fa-graduation-cap me-2"></i>Barsoi Public School</h2>
+    <p class="mb-0 opacity-75">Live Attendance Tracking & Search Portal</p>
+</div>
 
-    <!-- Stats Overview -->
-    <div class="stats-card">
-        <div class="stat-box">
-            <h3 id="totalRecords">0</h3>
-            <p>Total Attendance Records</p>
-        </div>
-        <div class="stat-box" style="background: #0f5132;">
-            <h3 id="filteredCount">0</h3>
-            <p>Filtered Results</p>
+<div class="container mb-5">
+    <!-- Filter Bar -->
+    <div class="filter-card mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-bold"><i class="fa-solid fa-layer-group me-1 text-success"></i> Class</label>
+                <select id="classFilter" class="form-select">
+                    <option value="">All Classes</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold"><i class="fa-regular fa-calendar-days me-1 text-success"></i> Date</label>
+                <input type="date" id="dateFilter" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold"><i class="fa-solid fa-magnifying-glass me-1 text-success"></i> Student Search</label>
+                <input type="text" id="searchInput" class="form-control" placeholder="Enter Name, ID, or Roll No...">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success w-100 fw-bold py-2" onclick="applyFilter()">
+                    <i class="fa-solid fa-filter me-1"></i> Search
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="filter-section">
-        <div class="filter-box">
-            <label>Filter by Class:</label>
-            <select id="classFilter" onchange="filterData()">
-                <option value="">All Classes</option>
-            </select>
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card card-stat bg-green-1 p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 text-uppercase opacity-75">Total Attendance Recorded</h6>
+                        <h2 class="fw-bold mb-0" id="totalCount">0</h2>
+                    </div>
+                    <i class="fa-solid fa-clipboard-user fa-2x opacity-50"></i>
+                </div>
+            </div>
         </div>
-        <div class="filter-box">
-            <label>Search Student (Name or ID):</label>
-            <input type="text" id="searchFilter" placeholder="Type name or roll..." onkeyup="filterData()">
+        <div class="col-md-4">
+            <div class="card card-stat bg-green-2 p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 text-uppercase opacity-75">Filtered Present Entries</h6>
+                        <h2 class="fw-bold mb-0" id="presentCount">0</h2>
+                    </div>
+                    <i class="fa-solid fa-user-check fa-2x opacity-50"></i>
+                </div>
+            </div>
         </div>
-        <div class="filter-box">
-            <label>Filter by Date:</label>
-            <input type="date" id="dateFilter" onchange="filterData()">
+        <div class="col-md-4">
+            <div class="card card-stat bg-green-3 p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 text-uppercase opacity-75">Active Classes</h6>
+                        <h2 class="fw-bold mb-0" id="activeClasses">0</h2>
+                    </div>
+                    <i class="fa-solid fa-school fa-2x opacity-50"></i>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Data Table -->
-    <div style="overflow-x: auto;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Student ID</th>
-                    <th>Roll No</th>
-                    <th>Class</th>
-                    <th>Student Name</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="6" style="text-align: center;">Loading data...</td></tr>
-            </tbody>
-        </table>
+    <div class="table-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-success mb-0"><i class="fa-solid fa-list me-2"></i>Attendance Report</h5>
+            <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()"><i class="fa-solid fa-rotate-right me-1"></i> Reset</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Student ID</th>
+                        <th>Roll No</th>
+                        <th>Class</th>
+                        <th>Student Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="6" class="text-center py-4 text-muted">Loading attendance logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwor-L5vsAo82PQ8t14ztsVbNZ6SjMizTxvQKpPJPBeUknK7nRE4wrC37A9McdUFDYG/exec"; // Apna Google Web App URL yahan paste karein
-    let allAttendanceData = [];
+    const API_URL = "https://script.google.com/macros/s/AKfycbwcqbMH6wEW3isFRMiMsPiebUL4_uALKBXy-7elBKpjs0XolIySjq5mO_-KsuSGHAVUKA/exec";
+    let rawRecords = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-        fetchDashboardData();
+        loadDashboardData();
     });
 
-    function fetchDashboardData() {
-        fetch(`${API_URL}?action=getAttendanceData`)
+    function loadDashboardData() {
+        fetch(`${API_URL}?action=getAttendanceDashboard`)
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data)) {
-                    allAttendanceData = data;
-                    populateClassDropdown(data);
-                    renderTable(data);
-                } else {
-                    document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">No data found</td></tr>`;
+                if (data && data.records) {
+                    rawRecords = data.records;
+                    
+                    // Populate Class Dropdown
+                    const classSelect = document.getElementById('classFilter');
+                    classSelect.innerHTML = '<option value="">All Classes</option>';
+                    data.classList.forEach(cls => {
+                        classSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
+                    });
+
+                    document.getElementById('activeClasses').innerText = data.classList.length;
+                    document.getElementById('totalCount').innerText = rawRecords.length;
+
+                    renderTable(rawRecords);
                 }
             })
             .catch(err => {
-                console.error(err);
-                Swal.fire('Error', 'Data load karne mein samasya aayi', 'error');
+                Swal.fire('Error', 'Data load karne me prblm hui', 'error');
             });
     }
 
-    function populateClassDropdown(data) {
-        const classes = [...new Set(data.map(item => item.className))].filter(Boolean);
-        const classSelect = document.getElementById('classFilter');
-        classSelect.innerHTML = '<option value="">All Classes</option>';
-        classes.forEach(cls => {
-            let opt = document.createElement('option');
-            opt.value = cls;
-            opt.innerText = cls;
-            classSelect.appendChild(opt);
-        });
-    }
-
-    function renderTable(data) {
+    function renderTable(dataList) {
         const tbody = document.getElementById('tableBody');
-        document.getElementById('totalRecords').innerText = allAttendanceData.length;
-        document.getElementById('filteredCount').innerText = data.length;
+        document.getElementById('presentCount').innerText = dataList.length;
 
-        if (data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #777;">No records match your filter</td></tr>`;
+        if (dataList.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No attendance logs found matching filters.</td></tr>`;
             return;
         }
 
-        let html = '';
-        data.forEach(row => {
-            html += `<tr>
-                <td>${row.timestamp}</td>
-                <td><b>${row.studentId}</b></td>
-                <td>${row.rollNo}</td>
-                <td>${row.className}</td>
-                <td><b>${row.name}</b></td>
-                <td><span class="badge">${row.status}</span></td>
-            </tr>`;
+        let rows = '';
+        dataList.forEach(item => {
+            const isPresent = String(item.status).toLowerCase() === 'present';
+            rows += `
+                <tr>
+                    <td><i class="fa-regular fa-clock text-muted me-1"></i><b>${item.date}</b></td>
+                    <td><span class="badge bg-light text-dark border">${item.studentId || '-'}</span></td>
+                    <td>${item.rollNo}</td>
+                    <td><span class="fw-bold text-success">${item.className}</span></td>
+                    <td class="fw-bold">${item.name}</td>
+                    <td><span class="${isPresent ? 'badge-present' : 'badge-absent'}">${item.status}</span></td>
+                </tr>
+            `;
         });
-        tbody.innerHTML = html;
+        tbody.innerHTML = rows;
     }
 
-    function filterData() {
-        const selectedClass = document.getElementById('classFilter').value.toLowerCase();
-        const searchText = document.getElementById('searchFilter').value.toLowerCase();
-        const selectedDate = document.getElementById('dateFilter').value;
+    function applyFilter() {
+        const selectedClass = document.getElementById('classFilter').value.toLowerCase().trim();
+        const selectedDateRaw = document.getElementById('dateFilter').value; // yyyy-mm-dd
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
 
-        const filtered = allAttendanceData.filter(item => {
-            const matchClass = selectedClass === "" || String(item.className).toLowerCase() === selectedClass;
-            const matchSearch = searchText === "" || String(item.name).toLowerCase().includes(searchText) || String(item.studentId).toLowerCase().includes(searchText) || String(item.rollNo).toLowerCase().includes(searchText);
-            const matchDate = selectedDate === "" || String(item.timestamp).includes(selectedDate);
+        let formattedDate = "";
+        if (selectedDateRaw) {
+            const parts = selectedDateRaw.split('-');
+            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // Convert to dd/mm/yyyy
+        }
 
-            return matchClass && matchSearch && matchDate;
+        const filtered = rawRecords.filter(r => {
+            const matchClass = !selectedClass || String(r.className).toLowerCase().trim() === selectedClass;
+            const matchDate = !formattedDate || String(r.date).trim() === formattedDate;
+            const matchQuery = !query || 
+                String(r.name).toLowerCase().includes(query) || 
+                String(r.studentId).toLowerCase().includes(query) || 
+                String(r.rollNo).toLowerCase().includes(query);
+
+            return matchClass && matchDate && matchQuery;
         });
 
         renderTable(filtered);
     }
-</script>
 
+    function resetFilters() {
+        document.getElementById('classFilter').value = '';
+        document.getElementById('dateFilter').value = '';
+        document.getElementById('searchInput').value = '';
+        renderTable(rawRecords);
+    }
+</script>
 </body>
 </html>
