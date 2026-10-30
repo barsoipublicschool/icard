@@ -126,15 +126,15 @@
         letter-spacing: 1px;
     }
 
-        .logo-img {
+    .logo-img {
         position: absolute;
         left: 6px;
         top: 4px;
         width: 32px;
         height: 32px;
         object-fit: contain;
-        background: transparent !important; /* Background transparent kar diya */
-        border: none !important; /* Border hata diya */
+        background: transparent !important;
+        border: none !important;
         box-shadow: none !important;
     }
 
@@ -213,6 +213,31 @@
         font-size: 15px;
         font-weight: 800;
         font-style: italic;
+    }
+
+    /* Principal Signature Styles */
+    .principal-sign-container {
+        position: absolute;
+        right: 15px;
+        bottom: 22px;
+        text-align: center;
+    }
+
+    .sign-img {
+        height: 30px;
+        max-width: 100px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto 2px auto;
+    }
+
+    .sign-label {
+        font-size: 9px;
+        font-weight: bold;
+        color: #0f5132;
+        text-transform: uppercase;
+        border-top: 1px solid #0f5132;
+        padding-top: 2px;
     }
 
     .footer {
@@ -471,6 +496,12 @@
                     </tr>
                 </table>
             </div>
+        </div>
+
+        <!-- Principal Signature Section Added Here -->
+        <div class="principal-sign-container">
+            <img src="https://drive.google.com/thumbnail?id=1JwgXbgsbPzZ2z2indNOZWOK-PWwaQvqN&sz=w300" class="sign-img" alt="Principal Signature">
+            <div class="sign-label">Principal's Sign</div>
         </div>
 
         <div class="footer">
