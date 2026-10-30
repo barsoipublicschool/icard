@@ -41,18 +41,11 @@
         padding: 15px;
         text-align: center;
         font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     .status-p { color: #198754; font-weight: bold; }
     .status-a { color: #dc3545; font-weight: bold; }
     .status-off { color: #6c757d; background: #e9ecef; font-weight: bold; }
-    
-    /* Photo Modal */
-    .modal-img-custom {
-        max-width: 90%;
-        max-height: 80vh;
-        border-radius: 10px;
-        border: 3px solid white;
-    }
 </style>
 </head>
 <body>
@@ -98,17 +91,24 @@
                     </div>
                 </div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <div class="stat-card bg-success">
-                            <h6 class="text-uppercase mb-1">Today's Total Attendance</h6>
-                            <h3 id="dashTotalCount" class="mb-0">0</h3>
+                <!-- 3 Stats Boxes Added Here -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #0d6efd, #0b5ed7);">
+                            <h6 class="text-uppercase mb-1 small opacity-75">Total No of Students</h6>
+                            <h3 id="dashTotalStudents" class="mb-0 fw-bold">0</h3>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="stat-card bg-primary">
-                            <h6 class="text-uppercase mb-1">Filtered Entries</h6>
-                            <h3 id="dashFilteredCount" class="mb-0">0</h3>
+                    <div class="col-md-4">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #198754, #0f5132);">
+                            <h6 class="text-uppercase mb-1 small opacity-75">Today's Total Attendance</h6>
+                            <h3 id="dashTotalCount" class="mb-0 fw-bold">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #ffc107, #d97706); color: #000 !important;">
+                            <h6 class="text-uppercase mb-1 small opacity-75">Active Classes</h6>
+                            <h3 id="dashActiveClasses" class="mb-0 fw-bold">0</h3>
                         </div>
                     </div>
                 </div>
@@ -229,12 +229,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwcqbMH6wEW3isFRMiMsPiebUL4_uALKBXy-7elBKpjs0XolIySjq5mO_-KsuSGHAVUKA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyGWjqCXoYfq4Xo4zsHiEJa7hVc7v2vuLhmtfw6FjwMm9zyWmmliC2bB9acG7h1FcNI/exec";
     let rawDashboardData = [];
     let classListGlobal = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-        // Set Default Dates
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -264,14 +263,29 @@
                     classListGlobal = data.classList || [];
 
                     populateClassDropdowns();
+                    calculateTotalStudents(); // Calculate total unique students across all tabs
                     applyDashboardFilter();
                 } else {
                     Swal.fire('Error', 'No attendance records found!', 'error');
                 }
             })
             .catch(err => {
-                Swal.fire('Error', 'Failed to connect with server. Please check network connection.', 'error');
+                Swal.fire('Error', 'Failed to connect with server.', 'error');
             });
+    }
+
+    // Har class ke records se unique students count karke Total No of Students nikalna
+    function calculateTotalStudents() {
+        const uniqueStudents = new Set();
+        rawDashboardData.forEach(r => {
+            if (r.studentId) {
+                uniqueStudents.add(r.studentId);
+            } else if (r.name && r.rollNo) {
+                uniqueStudents.add(r.className + "_" + r.rollNo + "_" + r.name);
+            }
+        });
+        document.getElementById('dashTotalStudents').innerText = uniqueStudents.size;
+        document.getElementById('dashActiveClasses').innerText = classListGlobal.length;
     }
 
     function populateClassDropdowns() {
@@ -318,7 +332,6 @@
         const todaysTotal = rawDashboardData.filter(r => String(r.date).trim() === todayStr).length;
 
         document.getElementById('dashTotalCount').innerText = todaysTotal;
-        document.getElementById('dashFilteredCount').innerText = filtered.length;
 
         const tbody = document.getElementById('dashTableBody');
         if (filtered.length === 0) {
@@ -418,7 +431,7 @@
     function generateMonthlyReport() {
         const cls = document.getElementById('monthlyClassList').value.trim();
         const studentName = document.getElementById('monthlyStudentList').value.trim();
-        const monthVal = document.getElementById('monthlyPicker').value; // yyyy-mm
+        const monthVal = document.getElementById('monthlyPicker').value;
 
         if (!cls) {
             Swal.fire('Warning', 'Please select a Class!', 'warning');
