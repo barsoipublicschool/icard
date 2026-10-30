@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superfast Scanner - Barsoi Public School</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+    body {
+        background: linear-gradient(135deg, #f0f4f8, #d9e8df);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        margin: 0;
+        padding: 15px;
+    }
+    .scanner-container {
+        max-width: 600px;
+        width: 100%;
+        margin: auto;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        text-align: center;
+    }
+    .header-title {
+        color: #0f5132;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+    .sub-title {
+        color: #198754;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+    }
+    #reader {
+        width: 100% !important;
+        border: 4px solid #198754 !important;
+        border-radius: 15px !important;
+        background: #f8f9fa !important;
+        overflow: hidden;
+        padding: 10px;
+    }
+    #reader video {
+        width: 100% !important;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+    #reader__dashboard_section_csr button {
+        background-color: #198754 !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        margin-top: 10px !important;
+    }
+    .footer-note {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 15px;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="scanner-container">
+        <h2 class="header-title"><i class="fa-solid fa-graduation-cap me-2"></i>BARSOI PUBLIC SCHOOL</h2>
+        <p class="sub-title"><i class="fa-solid fa-qrcode me-1"></i> Students' Attendance Scanner</p>
+        
+        <!-- Full / Responsive Camera View -->
+        <div id="reader"></div>
+
+        <p class="footer-note">Position the student's QR code clearly inside the camera frame for instant automatic marking.</p>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbz4ST4RCzKbLGUMsXCH8_JHljLfe30vGEk_L7aqjRWfH6MyJ5UD0ilXYj4lwWANiQQKWQ/exec";
+
+    let html5QrcodeScanner;
+
+    function onScanSuccess(decodedText) {
+        try {
+            let data = JSON.parse(decodedText);
+            html5QrcodeScanner.clear().then(() => {
+                markAttendance(data);
+            });
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid QR Code',
+                text: 'Yeh QR code school ka valid nahi hai!',
+                confirmButtonColor: '#198754'
+            }).then(() => restartScanner());
+        }
+    }
+
+    function markAttendance(studentData) {
+        Swal.fire({
+            title: 'Marking Present...',
+            text: `${studentData.name} (${studentData.class})`,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        fetch(`${API_URL}?action=markAttendance&data=${encodeURIComponent(JSON.stringify(studentData))}`)
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === "Success") {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Present Marked!',
+                        text: `${res.name} - Class ${studentData.class}`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => restartScanner());
+                } else if (res.status === "Already Marked") {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Already Marked',
+                        text: `${res.name} ki attendance aaj ho chuki hai.`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => restartScanner());
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: res.message || 'Failed',
+                        confirmButtonColor: '#198754'
+                    }).then(() => restartScanner());
+                }
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Connection Failed',
+                    text: 'Server se connect nahi ho paya!',
+                    confirmButtonColor: '#198754'
+                }).then(() => restartScanner());
+            });
+    }
+
+    function restartScanner() {
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+            fps: 20, 
+            qrbox: { width: 300, height: 300 } 
+        });
+        html5QrcodeScanner.render(onScanSuccess);
+    }
+
+    document.addEventListener("DOMContentLoaded", restartScanner);
+</script>
+</body>
+</html>
