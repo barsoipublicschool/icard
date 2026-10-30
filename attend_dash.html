@@ -264,8 +264,15 @@
 
                     populateClassDropdowns();
                     
-                    // Total Students count from backend (Column E non-empty count)
-                    document.getElementById('dashTotalStudents').innerText = data.totalStudentsCount || 0;
+                    // Calculate unique students directly from fetched records in frontend
+                    const uniqueStudents = new Set();
+                    rawDashboardData.forEach(r => {
+                        if (r.name && String(r.name).trim() !== "") {
+                            uniqueStudents.add(String(r.className).trim().toLowerCase() + "_" + String(r.name).trim().toLowerCase());
+                        }
+                    });
+
+                    document.getElementById('dashTotalStudents').innerText = uniqueStudents.size;
                     document.getElementById('dashActiveClasses').innerText = classListGlobal.length;
 
                     applyDashboardFilter();
@@ -451,7 +458,7 @@
             const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
 
             const record = rawDashboardData.find(r => {
-                return String(r.className).trim().toLowerCase() === cls.toLowerCase() &&
+                return String(r.className).toLowerCase().trim() === cls.toLowerCase() &&
                        String(r.name).trim().toLowerCase() === studentName.toLowerCase() &&
                        String(r.date).trim() === dateStr;
             });
