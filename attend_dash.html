@@ -91,7 +91,7 @@
                     </div>
                 </div>
 
-                <!-- 3 Stats Boxes Added Here -->
+                <!-- Stats Boxes -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <div class="stat-card" style="background: linear-gradient(135deg, #0d6efd, #0b5ed7);">
@@ -263,7 +263,7 @@
                     classListGlobal = data.classList || [];
 
                     populateClassDropdowns();
-                    calculateTotalStudents(); // Calculate total unique students across all tabs
+                    calculateTotalStudents(); 
                     applyDashboardFilter();
                 } else {
                     Swal.fire('Error', 'No attendance records found!', 'error');
@@ -274,14 +274,13 @@
             });
     }
 
-    // Har class ke records se unique students count karke Total No of Students nikalna
+    // Column E (Index 4 - Students Name) ke basis par unique non-empty students count karna
     function calculateTotalStudents() {
         const uniqueStudents = new Set();
         rawDashboardData.forEach(r => {
-            if (r.studentId) {
-                uniqueStudents.add(r.studentId);
-            } else if (r.name && r.rollNo) {
-                uniqueStudents.add(r.className + "_" + r.rollNo + "_" + r.name);
+            if (r.name && String(r.name).trim() !== "") {
+                // Class aur Student Name ka combination taaki alag-alag class ke duplicate naam bhi theek se count ho sakein
+                uniqueStudents.add(String(r.className).trim().toLowerCase() + "_" + String(r.name).trim().toLowerCase());
             }
         });
         document.getElementById('dashTotalStudents').innerText = uniqueStudents.size;
