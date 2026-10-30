@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Attendance Tracking Dashboard - Barsoi Public School</title>
+<title>Attendance Portal - Barsoi Public School</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -15,395 +15,473 @@
     .header-banner {
         background: linear-gradient(135deg, #0f5132, #198754);
         color: white;
-        padding: 25px 20px;
-        border-radius: 0 0 20px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    }
-    .card-stat {
-        border: none;
-        border-radius: 12px;
-        color: white;
-        transition: transform 0.2s;
-    }
-    .card-stat:hover { transform: translateY(-3px); }
-    .bg-green-1 { background: linear-gradient(135deg, #198754, #0f5132); }
-    .bg-green-2 { background: linear-gradient(135deg, #20c997, #0f5132); }
-    .bg-green-3 { background: linear-gradient(135deg, #ffc107, #d97706); color: #000 !important; }
-    
-    .filter-card {
-        background: white;
-        border-radius: 15px;
         padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin-top: -30px;
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    .tracker-card {
-        background: #eef7f2;
-        border: 1px solid #198754;
-        border-radius: 15px;
-        padding: 18px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-    .table-card {
-        background: white;
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    .badge-present {
-        background-color: #d1e7dd;
+    .nav-tabs .nav-link {
         color: #0f5132;
-        font-weight: 700;
-        padding: 6px 12px;
-        border-radius: 20px;
+        font-weight: bold;
+        border-radius: 8px 8px 0 0;
     }
-    .badge-absent {
-        background-color: #f8d7da;
-        color: #842029;
-        font-weight: 700;
-        padding: 6px 12px;
-        border-radius: 20px;
+    .nav-tabs .nav-link.active {
+        background-color: #198754;
+        color: white !important;
     }
-    .student-profile-box {
-        background: #fff;
-        border-left: 5px solid #198754;
+    .card-box {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-top: 15px;
+    }
+    .stat-card {
+        border-radius: 10px;
+        color: white;
         padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        text-align: center;
+        font-weight: bold;
+    }
+    .status-p { color: #198754; font-weight: bold; }
+    .status-a { color: #dc3545; font-weight: bold; }
+    .status-off { color: #6c757d; background: #e9ecef; font-weight: bold; }
+    
+    /* Photo Modal */
+    .modal-img-custom {
+        max-width: 90%;
+        max-height: 80vh;
+        border-radius: 10px;
+        border: 3px solid white;
     }
 </style>
 </head>
 <body>
 
-<div class="header-banner text-center">
+<div class="header-banner text-center mb-3">
     <h2><i class="fa-solid fa-graduation-cap me-2"></i>Barsoi Public School</h2>
-    <p class="mb-0 opacity-75">Live Daily & Monthly Attendance Tracking Portal</p>
+    <p class="mb-0 opacity-75">Attendance Management & Tracking Portal</p>
 </div>
 
 <div class="container mb-5">
-    <!-- Main Filter Bar -->
-    <div class="filter-card mb-4">
-        <div class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label fw-bold text-success"><i class="fa-solid fa-layer-group me-1"></i> Class</label>
-                <select id="classFilter" class="form-select" onchange="applyFilter()">
-                    <option value="">All Classes</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-bold text-success"><i class="fa-regular fa-calendar-days me-1"></i> Date</label>
-                <input type="date" id="dateFilter" class="form-control" onchange="applyFilter()">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label fw-bold text-success"><i class="fa-solid fa-magnifying-glass me-1"></i> Quick Search</label>
-                <input type="text" id="searchInput" class="form-control" placeholder="Enter Name, ID, or Roll No..." onkeyup="applyFilter()">
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-outline-secondary w-100 fw-bold py-2" onclick="resetFilters()">
-                    <i class="fa-solid fa-rotate-right me-1"></i> Reset
-                </button>
-            </div>
-        </div>
-    </div>
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs justify-content-center" id="attendanceTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard-sec" type="button"><i class="fa-solid fa-chart-line me-1"></i> Dashboard</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily-sec" type="button"><i class="fa-solid fa-calendar-day me-1"></i> Daily Report</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly-sec" type="button"><i class="fa-solid fa-calendar-days me-1"></i> Monthly Report</button>
+        </li>
+    </ul>
 
-    <!-- Individual Student Monthly Tracker Section -->
-    <div class="tracker-card">
-        <h5 class="fw-bold text-success mb-3"><i class="fa-solid fa-user-clock me-2"></i>Individual Student Monthly Attendance Tracker</h5>
-        <div class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label fw-bold small">1. Select Class</label>
-                <select id="trackerClass" class="form-select" onchange="onTrackerClassChange()">
-                    <option value="">Choose Class</option>
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-bold small">2. Select Student</label>
-                <select id="trackerStudent" class="form-select">
-                    <option value="">Choose Class First</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-success w-100 fw-bold" onclick="trackIndividualStudent()">
-                    <i class="fa-solid fa-chart-pie me-1"></i> View Report
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card card-stat bg-green-1 p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1 text-uppercase opacity-75">Today's Attendance</h6>
-                        <h2 class="fw-bold mb-0" id="totalCount">0</h2>
+    <div class="tab-content" id="attendanceTabsContent">
+        
+        <!-- 1. DASHBOARD SECTION -->
+        <div class="tab-pane fade show active" id="dashboard-sec">
+            <div class="card-box">
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-success"><i class="fa-solid fa-layer-group me-1"></i> Class</label>
+                        <select id="dashClassFilter" class="form-select" onchange="applyDashboardFilter()">
+                            <option value="">All Classes</option>
+                        </select>
                     </div>
-                    <i class="fa-solid fa-clipboard-user fa-2x opacity-50"></i>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-success"><i class="fa-regular fa-calendar me-1"></i> Date</label>
+                        <input type="date" id="dashDateFilter" class="form-control" onchange="applyDashboardFilter()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-success"><i class="fa-solid fa-magnifying-glass me-1"></i> Search Student</label>
+                        <input type="text" id="dashSearchInput" class="form-control" placeholder="Search by name, ID or roll..." onkeyup="applyDashboardFilter()">
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="stat-card bg-success">
+                            <h6 class="text-uppercase mb-1">Today's Total Attendance</h6>
+                            <h3 id="dashTotalCount" class="mb-0">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card bg-primary">
+                            <h6 class="text-uppercase mb-1">Filtered Entries</h6>
+                            <h3 id="dashFilteredCount" class="mb-0">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Student ID</th>
+                                <th>Roll No</th>
+                                <th>Class</th>
+                                <th>Student Name</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashTableBody">
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Loading attendance logs...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card card-stat bg-green-2 p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1 text-uppercase opacity-75">Filtered Present Entries</h6>
-                        <h2 class="fw-bold mb-0" id="presentCount">0</h2>
+
+        <!-- 2. DAILY REPORT SECTION -->
+        <div class="tab-pane fade" id="daily-sec">
+            <div class="card-box">
+                <h5 class="fw-bold text-success mb-3"><i class="fa-solid fa-calendar-day me-2"></i>Daily Attendance Tracking</h5>
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Select Class</label>
+                        <select id="dailyClassList" class="form-select">
+                            <option value="">Select Class</option>
+                        </select>
                     </div>
-                    <i class="fa-solid fa-user-check fa-2x opacity-50"></i>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Select Date</label>
+                        <input type="date" id="dailyDatePicker" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-success w-100 fw-bold" onclick="generateDailyReport()"><i class="fa-solid fa-file-invoice me-1"></i> Generate Report</button>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="stat-card bg-primary">Total Students: <span id="dailyTotalCount">0</span></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card bg-success">Present Count: <span id="dailyPresentCount">0</span></div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Roll No</th>
+                                <th>Class</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyReportTableBody">
+                            <tr><td colspan="5" class="text-center text-muted">Select Class and Date then click 'Generate Report'.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card card-stat bg-green-3 p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1 text-uppercase opacity-75">Active Classes</h6>
-                        <h2 class="fw-bold mb-0" id="activeClasses">0</h2>
+
+        <!-- 3. MONTHLY REPORT SECTION -->
+        <div class="tab-pane fade" id="monthly-sec">
+            <div class="card-box">
+                <h5 class="fw-bold text-success mb-3"><i class="fa-solid fa-calendar-days me-2"></i>Monthly Attendance Report</h5>
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">1. Select Class</label>
+                        <select id="monthlyClassList" class="form-select" onchange="loadMonthlyStudents()">
+                            <option value="">Select Class</option>
+                        </select>
                     </div>
-                    <i class="fa-solid fa-school fa-2x opacity-50"></i>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">2. Select Student</label>
+                        <select id="monthlyStudentList" class="form-select">
+                            <option value="">Select Class First</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">3. Select Month</label>
+                        <input type="month" id="monthlyPicker" class="form-control">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-success w-100 fw-bold" onclick="generateMonthlyReport()"><i class="fa-solid fa-magnifying-glass me-1"></i> Show Report</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Day</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthlyReportTableBody">
+                            <tr><td colspan="3" class="text-center text-muted">Select Class, Student and Month then click 'Show Report'.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Student Profile & Summary Box (Hidden by default) -->
-    <div id="studentProfileSection" style="display: none;"></div>
-
-    <!-- Data Table -->
-    <div class="table-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold text-success mb-0" id="tableTitle"><i class="fa-solid fa-list me-2"></i>Attendance Report (Today)</h5>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Date</th>
-                        <th>Student ID</th>
-                        <th>Roll No</th>
-                        <th>Class</th>
-                        <th>Student Name</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="6" class="text-center py-4 text-muted">Loading attendance logs...</td></tr>
-                </tbody>
-            </table>
-        </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwcqbMH6wEW3isFRMiMsPiebUL4_uALKBXy-7elBKpjs0XolIySjq5mO_-KsuSGHAVUKA/exec";
-    let rawRecords = [];
-    let allClassNames = [];
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyGWjqCXoYfq4Xo4zsHiEJa7hVc7v2vuLhmtfw6FjwMm9zyWmmliC2bB9acG7h1FcNI/exec";
+    let rawDashboardData = [];
+    let classListGlobal = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-        // Default date set to Today (YYYY-MM-DD)
-        const todayObj = new Date();
-        const yyyy = todayObj.getFullYear();
-        const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
-        const dd = String(todayObj.getDate()).padStart(2, '0');
-        document.getElementById('dateFilter').value = `${yyyy}-${mm}-${dd}`;
+        // Set Default Dates
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        
+        document.getElementById('dashDateFilter').value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('dailyDatePicker').value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('monthlyPicker').value = `${yyyy}-${mm}`;
 
-        loadDashboardData();
+        fetchInitialData();
     });
 
-    function loadDashboardData() {
-        fetch(`${API_URL}?action=getAttendanceDashboard`)
+    function fetchInitialData() {
+        Swal.fire({
+            title: 'Loading Data...',
+            text: 'Please wait while fetching records from server.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        fetch(`${SCRIPT_URL}?action=getAttendanceDashboard`)
             .then(res => res.json())
             .then(data => {
+                Swal.close();
                 if (data && data.records) {
-                    rawRecords = data.records;
-                    allClassNames = data.classList;
-                    
-                    // Populate Class Dropdowns
-                    const classSelect = document.getElementById('classFilter');
-                    const trackerClassSelect = document.getElementById('trackerClass');
-                    classSelect.innerHTML = '<option value="">All Classes</option>';
-                    trackerClassSelect.innerHTML = '<option value="">Choose Class</option>';
+                    rawDashboardData = data.records;
+                    classListGlobal = data.classList || [];
 
-                    allClassNames.forEach(cls => {
-                        classSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
-                        trackerClassSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
-                    });
-
-                    document.getElementById('activeClasses').innerText = allClassNames.length;
-                    applyFilter(); // Initial filter apply for today's date
+                    populateClassDropdowns();
+                    applyDashboardFilter();
+                } else {
+                    Swal.fire('Error', 'No attendance records found!', 'error');
                 }
             })
             .catch(err => {
-                Swal.fire('Error', 'Data load karne me prblm hui', 'error');
+                Swal.fire('Error', 'Failed to connect with server. Please check network connection.', 'error');
             });
     }
 
-    // Dynamic Student Dropdown Population based on Selected Class
-    function onTrackerClassChange() {
-        const selectedClass = document.getElementById('trackerClass').value.trim().toLowerCase();
-        const studentSelect = document.getElementById('trackerStudent');
-        studentSelect.innerHTML = '<option value="">Choose Student</option>';
+    function populateClassDropdowns() {
+        const dashSelect = document.getElementById('dashClassFilter');
+        const dailySelect = document.getElementById('dailyClassList');
+        const monthlySelect = document.getElementById('monthlyClassList');
 
-        if (!selectedClass) return;
+        dashSelect.innerHTML = '<option value="">All Classes</option>';
+        dailySelect.innerHTML = '<option value="">Select Class</option>';
+        monthlySelect.innerHTML = '<option value="">Select Class</option>';
+
+        classListGlobal.forEach(cls => {
+            dashSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
+            dailySelect.innerHTML += `<option value="${cls}">${cls}</option>`;
+            monthlySelect.innerHTML += `<option value="${cls}">${cls}</option>`;
+        });
+    }
+
+    /* ---------------- 1. DASHBOARD LOGIC ---------------- */
+    function applyDashboardFilter() {
+        const cls = document.getElementById('dashClassFilter').value.toLowerCase().trim();
+        const dateRaw = document.getElementById('dashDateFilter').value;
+        const search = document.getElementById('dashSearchInput').value.toLowerCase().trim();
+
+        let formattedDate = "";
+        if (dateRaw) {
+            const parts = dateRaw.split('-');
+            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        const filtered = rawDashboardData.filter(r => {
+            const matchClass = !cls || String(r.className).toLowerCase().trim() === cls;
+            const matchDate = !formattedDate || String(r.date).trim() === formattedDate;
+            const matchSearch = !search || 
+                String(r.name).toLowerCase().includes(search) || 
+                String(r.studentId).toLowerCase().includes(search) || 
+                String(r.rollNo).toLowerCase().includes(search);
+
+            return matchClass && matchDate && matchSearch;
+        });
+
+        const todayObj = new Date();
+        const todayStr = `${String(todayObj.getDate()).padStart(2, '0')}/${String(todayObj.getMonth() + 1).padStart(2, '0')}/${todayObj.getFullYear()}`;
+        const todaysTotal = rawDashboardData.filter(r => String(r.date).trim() === todayStr).length;
+
+        document.getElementById('dashTotalCount').innerText = todaysTotal;
+        document.getElementById('dashFilteredCount').innerText = filtered.length;
+
+        const tbody = document.getElementById('dashTableBody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-muted">No records found.</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(r => {
+            html += `
+                <tr>
+                    <td><b>${r.date}</b></td>
+                    <td>${r.studentId || '-'}</td>
+                    <td>${r.rollNo}</td>
+                    <td><span class="badge bg-success">${r.className}</span></td>
+                    <td><b>${r.name}</b></td>
+                    <td><span class="status-p">${r.status}</span></td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    /* ---------------- 2. DAILY REPORT LOGIC ---------------- */
+    function generateDailyReport() {
+        const cls = document.getElementById('dailyClassList').value.trim();
+        const dateRaw = document.getElementById('dailyDatePicker').value;
+
+        if (!cls) {
+            Swal.fire('Warning', 'Please select a Class!', 'warning');
+            return;
+        }
+        if (!dateRaw) {
+            Swal.fire('Warning', 'Please select a Date!', 'warning');
+            return;
+        }
+
+        const parts = dateRaw.split('-');
+        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+        const filtered = rawDashboardData.filter(r => {
+            return String(r.className).toLowerCase().trim() === cls.toLowerCase() && String(r.date).trim() === formattedDate;
+        });
+
+        document.getElementById('dailyTotalCount').innerText = filtered.length;
+        document.getElementById('dailyPresentCount').innerText = filtered.filter(r => String(r.status).toLowerCase() === 'present').length;
+
+        const tbody = document.getElementById('dailyReportTableBody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No attendance entries found for selected date and class.</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(r => {
+            html += `
+                <tr>
+                    <td><b>${r.name}</b></td>
+                    <td>${r.rollNo}</td>
+                    <td>${r.className}</td>
+                    <td class="status-p">${r.status}</td>
+                    <td>${r.date}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    /* ---------------- 3. MONTHLY REPORT LOGIC ---------------- */
+    function loadMonthlyStudents() {
+        const cls = document.getElementById('monthlyClassList').value.trim().toLowerCase();
+        const studentSelect = document.getElementById('monthlyStudentList');
+        studentSelect.innerHTML = '<option value="">Select Student</option>';
+
+        if (!cls) return;
 
         const uniqueStudents = [];
         const seen = new Set();
 
-        rawRecords.forEach(r => {
-            if (String(r.className).trim().toLowerCase() === selectedClass) {
-                const identifier = (r.studentId || '') + '_' + (r.rollNo || '');
-                if (!seen.has(identifier)) {
-                    seen.add(identifier);
-                    uniqueStudents.push({
-                        id: r.studentId || '-',
-                        roll: r.rollNo || '',
-                        name: r.name || ''
-                    });
+        rawDashboardData.forEach(r => {
+            if (String(r.className).trim().toLowerCase() === cls) {
+                const key = r.name;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueStudents.push({ name: r.name, roll: r.rollNo, id: r.studentId });
                 }
             }
         });
 
-        // Sort by Roll No if possible
         uniqueStudents.sort((a, b) => Number(a.roll) - Number(b.roll));
 
         uniqueStudents.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.name; 
-            opt.setAttribute('data-id', s.id);
-            opt.setAttribute('data-roll', s.roll);
-            opt.innerText = `${s.name} (Roll: ${s.roll}, ID: ${s.id})`;
-            studentSelect.appendChild(opt);
+            studentSelect.innerHTML += `<option value="${s.name}">${s.name} (Roll: ${s.roll})</option>`;
         });
     }
 
-    function renderTable(dataList, titleText = "Attendance Report") {
-        const tbody = document.getElementById('tableBody');
-        document.getElementById('presentCount').innerText = dataList.length;
-        document.getElementById('tableTitle').innerHTML = `<i class="fa-solid fa-list me-2"></i>${titleText} (${dataList.length} records)`;
+    function generateMonthlyReport() {
+        const cls = document.getElementById('monthlyClassList').value.trim();
+        const studentName = document.getElementById('monthlyStudentList').value.trim();
+        const monthVal = document.getElementById('monthlyPicker').value; // yyyy-mm
 
-        if (dataList.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No attendance logs found matching filters.</td></tr>`;
+        if (!cls) {
+            Swal.fire('Warning', 'Please select a Class!', 'warning');
+            return;
+        }
+        if (!studentName) {
+            Swal.fire('Warning', 'Please select a Student!', 'warning');
+            return;
+        }
+        if (!monthVal) {
+            Swal.fire('Warning', 'Please select a Month!', 'warning');
             return;
         }
 
-        let rows = '';
-        dataList.forEach(item => {
-            const isPresent = String(item.status).toLowerCase() === 'present';
-            rows += `
-                <tr>
-                    <td><i class="fa-regular fa-clock text-muted me-1"></i><b>${item.date}</b></td>
-                    <td><span class="badge bg-light text-dark border">${item.studentId || '-'}</span></td>
-                    <td>${item.rollNo}</td>
-                    <td><span class="fw-bold text-success">${item.className}</span></td>
-                    <td class="fw-bold">${item.name}</td>
-                    <td><span class="${isPresent ? 'badge-present' : 'badge-absent'}">${item.status}</span></td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = rows;
-    }
+        const [year, month] = monthVal.split('-');
+        const tbody = document.getElementById('monthlyReportTableBody');
+        tbody.innerHTML = '';
 
-    function applyFilter() {
-        // Hide individual student profile box when using general filters
-        document.getElementById('studentProfileSection').style.display = 'none';
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const today = new Date();
+        today.setHours(0,0,0,0);
 
-        const selectedClass = document.getElementById('classFilter').value.toLowerCase().trim();
-        const selectedDateRaw = document.getElementById('dateFilter').value; // yyyy-mm-dd
-        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        for (let day = 1; day <= daysInMonth; day++) {
+            const d = new Date(year, month - 1, day);
+            const dayFormatted = String(day).padStart(2, '0');
+            const dateStr = `${dayFormatted}/${month}/${year}`;
+            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
 
-        let formattedDate = "";
-        if (selectedDateRaw) {
-            const parts = selectedDateRaw.split('-');
-            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // Convert to dd/mm/yyyy
+            const record = rawDashboardData.find(r => {
+                return String(r.className).trim().toLowerCase() === cls.toLowerCase() &&
+                       String(r.name).trim().toLowerCase() === studentName.toLowerCase() &&
+                       String(r.date).trim() === dateStr;
+            });
+
+            let tr = document.createElement('tr');
+
+            if (d.getDay() === 0) { // Sunday
+                tr.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td>${dayName}</td>
+                    <td class="status-off">Week Off</td>
+                `;
+            } else if (record) { // Present
+                tr.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td>${dayName}</td>
+                    <td class="status-p">Present</td>
+                `;
+            } else if (d < today) { // Past Date Absent
+                tr.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td>${dayName}</td>
+                    <td class="status-a">Absent</td>
+                `;
+            } else { // Future Date
+                tr.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td>${dayName}</td>
+                    <td class="text-muted">-</td>
+                `;
+            }
+            tbody.appendChild(tr);
         }
-
-        const filtered = rawRecords.filter(r => {
-            const matchClass = !selectedClass || String(r.className).toLowerCase().trim() === selectedClass;
-            const matchDate = !formattedDate || String(r.date).trim() === formattedDate;
-            const matchQuery = !query || 
-                String(r.name).toLowerCase().includes(query) || 
-                String(r.studentId).toLowerCase().includes(query) || 
-                String(r.rollNo).toLowerCase().includes(query);
-
-            return matchClass && matchDate && matchQuery;
-        });
-
-        // Today's total count for stat card
-        const todayObj = new Date();
-        const todayStr = `${String(todayObj.getDate()).padStart(2, '0')}/${String(todayObj.getMonth() + 1).padStart(2, '0')}/${todayObj.getFullYear()}`;
-        const todaysTotal = rawRecords.filter(r => String(r.date).trim() === todayStr).length;
-        document.getElementById('totalCount').innerText = todaysTotal;
-
-        renderTable(filtered, "Attendance Report");
-    }
-
-    // Individual Student Monthly Track Report
-    function trackIndividualStudent() {
-        const cls = document.getElementById('trackerClass').value.trim();
-        const studentSelect = document.getElementById('trackerStudent');
-        const studentName = studentSelect.value.trim();
-
-        if (!cls || !studentName) {
-            Swal.fire('Warning', 'Kripya Class aur Student dono select karein!', 'warning');
-            return;
-        }
-
-        const selectedOption = studentSelect.options[studentSelect.selectedIndex];
-        const studentId = selectedOption.getAttribute('data-id');
-        const rollNo = selectedOption.getAttribute('data-roll');
-
-        // Filter all records for this student across all dates (Monthly View)
-        const studentRecords = rawRecords.filter(r => {
-            const matchClass = String(r.className).trim().toLowerCase() === cls.toLowerCase();
-            const matchName = String(r.name).trim().toLowerCase() === studentName.toLowerCase();
-            return matchClass && matchName;
-        });
-
-        // Sort records by date descending or ascending
-        studentRecords.sort((a, b) => {
-            const partsA = a.date.split('/');
-            const partsB = b.date.split('/');
-            return new Date(partsB[2], partsB[1]-1, partsB[0]) - new Date(partsA[2], partsA[1]-1, partsA[0]);
-        });
-
-        // Display Student Profile & Summary Box
-        const profileSection = document.getElementById('studentProfileSection');
-        profileSection.style.display = 'block';
-        profileSection.innerHTML = `
-            <div class="student-profile-box">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h5 class="fw-bold text-success mb-1"><i class="fa-solid fa-user-graduate me-2"></i>${studentName}</h5>
-                        <p class="mb-0 text-muted small">
-                            Class: <b>${cls}</b> &nbsp;|&nbsp; Roll No: <b>${rollNo || '-'}</b> &nbsp;|&nbsp; Student ID: <b>${studentId || '-'}</b>
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-md-end mt-2 mt-md-0">
-                        <span class="badge bg-success p-2 fs-6">Total Present Days: ${studentRecords.length}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        renderTable(studentRecords, `Monthly Attendance Report: ${studentName}`);
-    }
-
-    function resetFilters() {
-        const todayObj = new Date();
-        const yyyy = todayObj.getFullYear();
-        const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
-        const dd = String(todayObj.getDate()).padStart(2, '0');
-        document.getElementById('dateFilter').value = `${yyyy}-${mm}-${dd}`;
-
-        document.getElementById('classFilter').value = '';
-        document.getElementById('searchInput').value = '';
-        document.getElementById('trackerClass').value = '';
-        document.getElementById('trackerStudent').innerHTML = '<option value="">Choose Class First</option>';
-        document.getElementById('studentProfileSection').style.display = 'none';
-        applyFilter();
     }
 </script>
 </body>
