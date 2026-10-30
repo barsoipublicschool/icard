@@ -229,7 +229,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxnS8bbbDBLeXMHUUxXZUK64zSFJvz7y8ufQFkZ9oUF4i55X5Rkr7orCvQ_c9J3QyNgSw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4ST4RCzKbLGUMsXCH8_JHljLfe30vGEk_L7aqjRWfH6MyJ5UD0ilXYj4lwWANiQQKWQ/exec";
     let rawDashboardData = [];
     let classListGlobal = [];
 
@@ -264,15 +264,8 @@
 
                     populateClassDropdowns();
                     
-                    // Calculate unique students directly from fetched records in frontend
-                    const uniqueStudents = new Set();
-                    rawDashboardData.forEach(r => {
-                        if (r.name && String(r.name).trim() !== "") {
-                            uniqueStudents.add(String(r.className).trim().toLowerCase() + "_" + String(r.name).trim().toLowerCase());
-                        }
-                    });
-
-                    document.getElementById('dashTotalStudents').innerText = uniqueStudents.size;
+                    // Backend se aane wala totalStudentsCount direct yahan set hoga
+                    document.getElementById('dashTotalStudents').innerText = data.totalStudentsCount || 0;
                     document.getElementById('dashActiveClasses').innerText = classListGlobal.length;
 
                     applyDashboardFilter();
