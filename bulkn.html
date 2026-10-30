@@ -8,7 +8,6 @@
 <!-- QRCode JS Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-    /* A4 Landscape Page Setup for Print/PDF */
     @page {
         size: A4 landscape;
         margin: 10mm;
@@ -33,7 +32,7 @@
         border-radius: 10px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         display: flex;
-        gap: 10px;
+        gap: 15px;
         align-items: center;
         margin-bottom: 20px;
     }
@@ -43,6 +42,7 @@
         border: 1px solid #ccc;
         border-radius: 5px;
         outline: none;
+        font-weight: bold;
     }
 
     .btn {
@@ -56,14 +56,13 @@
     .btn-generate { background: #0f5132; }
     .btn-print { background: #198754; display: none; }
 
-    /* A4 Landscape Page Grid Container for Bulk Cards */
     .a4-page {
         width: 277mm;
         min-height: 190mm;
         padding: 5mm;
         background: #fff;
         display: grid;
-        grid-template-columns: repeat(2, 1fr); /* 2 students per row: Student 1 (Front + Back), Student 2 (Front + Back) -> Let's format per card pair */
+        grid-template-columns: repeat(2, 1fr);
         gap: 15mm 10mm;
         margin-bottom: 10mm;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -83,7 +82,6 @@
         page-break-inside: avoid;
     }
 
-    /* FRONT SIDE */
     .id-card {
         width: 480px;
         height: 300px;
@@ -202,7 +200,6 @@
         border-top-right-radius: 50% 10px;
     }
 
-    /* BACK SIDE */
     .id-card-back {
         background: #eef7f2 !important;
         display: flex;
@@ -262,7 +259,6 @@
     .terms-title { font-weight: bold; color: #0f5132; margin-bottom: 1px; font-size: 9px; text-transform: uppercase; }
     .terms-list { margin: 0; padding-left: 10px; }
 
-    /* Print Setup */
     @media print {
         @page { size: A4 landscape; margin: 5mm; }
         body { background: none; padding: 0; }
@@ -275,7 +271,7 @@
 <body>
 
 <div id="controls">
-    <label><b>Enter Class:</b></label>
+    <label><b>Enter Class Name:</b></label>
     <input type="text" id="clsInput" placeholder="e.g. 8th">
     <button class="btn btn-generate" onclick="generateBulkCards()">Fetch All ID Cards</button>
     <button class="btn btn-print" id="btnPrint" onclick="window.print()">Print A4 Landscape</button>
@@ -307,16 +303,49 @@
 
     function generateBulkCards() {
         const cls = document.getElementById('clsInput').value.trim();
-        if (!cls) return Swal.fire('Warning', 'Please enter class!', 'warning');
+        if (!cls) return Swal.fire('Warning', 'Please enter class name (e.g. 8th)!', 'warning');
 
         Swal.fire({ title: 'Loading Class Data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-        fetch(`${API_URL}?action=getClassStudents&className=${encodeURIComponent(cls)}`)
+        // Kyunki hum code.gs nahi badal rahe, hum existing `getAttendanceDashboard` se saare records fetch karke selected class ke students filter kar lenge
+        fetch(`${API_URL}?action=getAttendanceDashboard`)
             .then(res => res.json())
-            .then(students => {
+            .then(data => {
                 Swal.close();
-                if (!students || students.length === 0) {
-                    return Swal.fire('No Data', 'No students found for this class!', 'info');
+                if (!data || !data.records) {
+                    return Swal.fire('Error', 'Failed to fetch records from server', 'error');
+                }
+
+                // Selected class ke students filter karein (records se unique students nikal kar)
+                const studentMap = new Map();
+                data.records.forEach(r => {
+                    if (String(r.className).toLowerCase().trim() === cls.toLowerCase()) {
+                        const key = r.rollNo || r.name;
+                        if (!studentMap.has(key)) {
+                            studentMap.set(key, {
+                                rollNo: r.rollNo,
+                                regNo: r.studentId,
+                                class: r.className,
+                                section: r.section,
+                                name: r.name,
+                                father: r.father || "-",
+                                mother: r.mother || "-",
+                                dob: r.dob || "-",
+                                address: r.address || "Barsoi, Katihar",
+                                mobile: r.mobile || "-",
+                                photo: r.photo || "",
+                                bloodGroup: r.bloodGroup || "N/A",
+                                joinDate: r.joinDate || "-",
+                                expireDate: r.expireDate || "-"
+                            });
+                        }
+                    }
+                });
+
+                const students = Array.from(studentMap.values());
+
+                if (students.length === 0) {
+                    return Swal.fire('No Data', 'No students found for this class in attendance logs!', 'info');
                 }
 
                 const container = document.getElementById('pagesContainer');
@@ -326,7 +355,7 @@
                 pageDiv.className = 'a4-page';
 
                 students.forEach((s, index) => {
-                    if (index > 0 && index % 2 === 0) { // 2 student pairs per page layout
+                    if (index > 0 && index % 2 === 0) {
                         container.appendChild(pageDiv);
                         pageDiv = document.createElement('div');
                         pageDiv.className = 'a4-page';
@@ -336,8 +365,6 @@
                     const studentName = getSafeVal(s.name);
                     const photoVal = getSafeVal(s.photo, "");
                     const photoUrl = photoVal !== "-" && photoVal !== "" ? photoVal : "https://via.placeholder.com/100x115?text=No+Photo";
-
-                    // Unique IDs for QR Code container generation
                     const qrId = `qrcode_${index}`;
 
                     const cardPairHTML = `
@@ -406,7 +433,6 @@
 
                     pageDiv.innerHTML += cardPairHTML;
 
-                    // Generate QR Code after inserting into DOM using setTimeout
                     setTimeout(() => {
                         const attendanceData = JSON.stringify({
                             id: studentId,
