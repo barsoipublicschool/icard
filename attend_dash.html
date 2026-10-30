@@ -100,19 +100,21 @@
         </div>
     </div>
 
-    <!-- Individual Student Tracker Section (Newly Added) -->
+    <!-- Individual Student Monthly Tracker Section (Dropdown Based) -->
     <div class="tracker-card">
-        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-user-shield me-2"></i>Individual Student Attendance Tracker</h6>
+        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-user-shield me-2"></i>Individual Student Monthly Attendance Tracker</h6>
         <div class="row g-3 align-items-end">
             <div class="col-md-4">
                 <label class="form-label fw-bold small">Select Class</label>
-                <select id="trackerClass" class="form-select form-select-sm">
+                <select id="trackerClass" class="form-select form-select-sm" onchange="onTrackerClassChange()">
                     <option value="">Choose Class</option>
                 </select>
             </div>
             <div class="col-md-6">
-                <label class="form-label fw-bold small">Student Name / ID / Roll No</label>
-                <input type="text" id="trackerStudent" class="form-control form-control-sm" placeholder="Type student name or ID to track...">
+                <label class="form-label fw-bold small">Select Student</label>
+                <select id="trackerStudent" class="form-select form-select-sm">
+                    <option value="">Choose Class First</option>
+                </select>
             </div>
             <div class="col-md-2">
                 <button class="btn btn-success btn-sm w-100 fw-bold" onclick="trackIndividualStudent()">
@@ -185,7 +187,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyGWjqCXoYfq4Xo4zsHiEJa7hVc7v2vuLhmtfw6FjwMm9zyWmmliC2bB9acG7h1FcNI/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwcqbMH6wEW3isFRMiMsPiebUL4_uALKBXy-7elBKpjs0XolIySjq5mO_-KsuSGHAVUKA/exec";
     let rawRecords = [];
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -226,99 +228,17 @@
             });
     }
 
-    function renderTable(dataList, titleText = "Attendance Report") {
-        const tbody = document.getElementById('tableBody');
-        document.getElementById('presentCount').innerText = dataList.length;
-        document.getElementById('tableTitle').innerHTML = `<i class="fa-solid fa-list me-2"></i>${titleText} (${dataList.length} records)`;
+    // Dynamic Student Dropdown Population based on Selected Class
+    function onTrackerClassChange() {
+        const selectedClass = document.getElementById('trackerClass').value.trim().toLowerCase();
+        const studentSelect = document.getElementById('trackerStudent');
+        studentSelect.innerHTML = '<option value="">Choose Student</option>';
 
-        if (dataList.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No attendance logs found matching filters.</td></tr>`;
-            return;
-        }
+        if (!selectedClass) return;
 
-        let rows = '';
-        dataList.forEach(item => {
-            const isPresent = String(item.status).toLowerCase() === 'present';
-            rows += `
-                <tr>
-                    <td><i class="fa-regular fa-clock text-muted me-1"></i><b>${item.date}</b></td>
-                    <td><span class="badge bg-light text-dark border">${item.studentId || '-'}</span></td>
-                    <td>${item.rollNo}</td>
-                    <td><span class="fw-bold text-success">${item.className}</span></td>
-                    <td class="fw-bold">${item.name}</td>
-                    <td><span class="${isPresent ? 'badge-present' : 'badge-absent'}">${item.status}</span></td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = rows;
-    }
+        const uniqueStudents = [];
+        const seen = new Set();
 
-    function applyFilter() {
-        const selectedClass = document.getElementById('classFilter').value.toLowerCase().trim();
-        const selectedDateRaw = document.getElementById('dateFilter').value; // yyyy-mm-dd
-        const query = document.getElementById('searchInput').value.toLowerCase().trim();
-
-        let formattedDate = "";
-        if (selectedDateRaw) {
-            const parts = selectedDateRaw.split('-');
-            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // Convert to dd/mm/yyyy
-        }
-
-        const filtered = rawRecords.filter(r => {
-            const matchClass = !selectedClass || String(r.className).toLowerCase().trim() === selectedClass;
-            const matchDate = !formattedDate || String(r.date).trim() === formattedDate;
-            const matchQuery = !query || 
-                String(r.name).toLowerCase().includes(query) || 
-                String(r.studentId).toLowerCase().includes(query) || 
-                String(r.rollNo).toLowerCase().includes(query);
-
-            return matchClass && matchDate && matchQuery;
-        });
-
-        // Today's total count for stat card
-        const todayObj = new Date();
-        const todayStr = `${String(todayObj.getDate()).padStart(2, '0')}/${String(todayObj.getMonth() + 1).padStart(2, '0')}/${todayObj.getFullYear()}`;
-        const todaysTotal = rawRecords.filter(r => String(r.date).trim() === todayStr).length;
-        document.getElementById('totalCount').innerText = todaysTotal;
-
-        renderTable(filtered, "Attendance Report");
-    }
-
-    function trackIndividualStudent() {
-        const cls = document.getElementById('trackerClass').value.toLowerCase().trim();
-        const studentQuery = document.getElementById('trackerStudent').value.toLowerCase().trim();
-
-        if (!cls && !studentQuery) {
-            Swal.fire('Warning', 'Kripya Class aur Student ka naam/ID darj karein!', 'warning');
-            return;
-        }
-
-        const filtered = rawRecords.filter(r => {
-            const matchClass = !cls || String(r.className).toLowerCase().trim() === cls;
-            const matchStudent = !studentQuery || 
-                String(r.name).toLowerCase().includes(studentQuery) || 
-                String(r.studentId).toLowerCase().includes(studentQuery) || 
-                String(r.rollNo).toLowerCase().includes(studentQuery);
-
-            return matchClass && matchStudent;
-        });
-
-        renderTable(filtered, `Tracking Result for "${document.getElementById('trackerStudent').value}"`);
-    }
-
-    function resetFilters() {
-        const todayObj = new Date();
-        const yyyy = todayObj.getFullYear();
-        const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
-        const dd = String(todayObj.getDate()).padStart(2, '0');
-        document.getElementById('dateFilter').value = `${yyyy}-${mm}-${dd}`;
-
-        document.getElementById('classFilter').value = '';
-        document.getElementById('searchInput').value = '';
-        document.getElementById('trackerClass').value = '';
-        document.getElementById('trackerStudent').value = '';
-        applyFilter();
-    }
-</script>
-</body>
-</html>
+        rawRecords.forEach(r => {
+            if (String(r.className).trim().toLowerCase() === selectedClass) {
+                const identifier
