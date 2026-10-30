@@ -99,7 +99,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Invalid QR Code',
-                text: 'Yeh QR code school ka valid nahi hai!',
+                text: 'This QR code is not valid!',
                 confirmButtonColor: '#198754'
             }).then(() => restartScanner());
         }
@@ -128,7 +128,7 @@
                     Swal.fire({
                         icon: 'info',
                         title: 'Already Marked',
-                        text: `${res.name} ki attendance aaj ho chuki hai.`,
+                        text: `${res.name} ! Your attendance has been marked today.`,
                         timer: 2000,
                         showConfirmButton: false
                     }).then(() => restartScanner());
@@ -145,7 +145,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Connection Failed',
-                    text: 'Server se connect nahi ho paya!',
+                    text: 'Could not connect to the Server!',
                     confirmButtonColor: '#198754'
                 }).then(() => restartScanner());
             });
