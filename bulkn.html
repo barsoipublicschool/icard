@@ -59,7 +59,7 @@
     .btn-generate { background: #0f5132; }
     .btn-print { background: #198754; display: none; }
 
-    /* A4 Portrait Page Container (Exact 5 ID card pairs per page) */
+    /* A4 Portrait Page Container (5 ID card pairs per page) */
     .a4-page {
         width: 200mm;
         min-height: 287mm;
@@ -242,7 +242,7 @@
 
     .student-summary .s-name {
         font-size: 10px; font-weight: 800; color: #0f5132; text-transform: uppercase;
-        max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .student-summary .s-id { font-size: 8px; font-weight: 700; color: #198754; margin-top: 1px; }
 
@@ -338,6 +338,7 @@
         pageDiv.className = 'a4-page';
         let foundCount = 0;
         let cardsOnCurrentPage = 0;
+        let qrDataList = [];
 
         for (let roll = startRoll; roll <= endRoll; roll++) {
             try {
@@ -356,7 +357,16 @@
                     const studentName = getSafeVal(d.name);
                     const photoVal = getSafeVal(d.photo, "");
                     const photoUrl = photoVal !== "-" && photoVal !== "" ? photoVal : "https://via.placeholder.com/80x95?text=No+Photo";
-                    const qrId = `qrcode_${foundCount}`;
+                    const qrId = `qrcode_bulk_${foundCount}`;
+
+                    const attendanceData = JSON.stringify({
+                        id: studentId,
+                        roll: getSafeVal(d.rollNo, roll),
+                        class: getSafeVal(d.class, cls),
+                        name: studentName
+                    });
+
+                    qrDataList.push({ id: qrId, text: attendanceData });
 
                     const cardPairHTML = `
                         <div class="student-card-pair">
@@ -423,25 +433,6 @@
                     `;
 
                     pageDiv.innerHTML += cardPairHTML;
-
-                    setTimeout(() => {
-                        const attendanceData = JSON.stringify({
-                            id: studentId,
-                            roll: getSafeVal(d.rollNo, roll),
-                            class: getSafeVal(d.class, cls),
-                            name: studentName
-                        });
-
-                        new QRCode(document.getElementById(qrId), {
-                            text: attendanceData,
-                            width: 75,
-                            height: 75,
-                            colorDark : "#0f5132",
-                            colorLight : "#ffffff",
-                            correctLevel : QRCode.CorrectLevel.H
-                        });
-                    }, 50);
-
                     cardsOnCurrentPage++;
                     foundCount++;
                 }
@@ -450,14 +441,33 @@
             }
         }
 
+        if (cardsOnCurrentPage > 0) {
+            container.appendChild(pageDiv);
+        }
+
+        // Render QR Codes after elements are attached to the DOM
+        setTimeout(() => {
+            qrDataList.forEach(item => {
+                const elem = document.getElementById(item.id);
+                if (elem) {
+                    elem.innerHTML = "";
+                    new QRCode(elem, {
+                        text: item.text,
+                        width: 70,
+                        height: 70,
+                        colorDark : "#0f5132",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                }
+            });
+        }, 100);
+
         Swal.close();
 
         if (foundCount === 0) {
             Swal.fire('No Data Found', 'Given Roll range mein koi students record nahi mila!', 'info');
         } else {
-            if (cardsOnCurrentPage > 0) {
-                container.appendChild(pageDiv);
-            }
             document.getElementById('btnPrint').style.display = 'inline-block';
         }
     }
