@@ -65,13 +65,21 @@
         padding: 6px 12px;
         border-radius: 20px;
     }
+    .student-profile-box {
+        background: #fff;
+        border-left: 5px solid #198754;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
 </style>
 </head>
 <body>
 
 <div class="header-banner text-center">
     <h2><i class="fa-solid fa-graduation-cap me-2"></i>Barsoi Public School</h2>
-    <p class="mb-0 opacity-75">Live Attendance Tracking & Search Portal</p>
+    <p class="mb-0 opacity-75">Live Daily & Monthly Attendance Tracking Portal</p>
 </div>
 
 <div class="container mb-5">
@@ -89,7 +97,7 @@
                 <input type="date" id="dateFilter" class="form-control" onchange="applyFilter()">
             </div>
             <div class="col-md-4">
-                <label class="form-label fw-bold text-success"><i class="fa-solid fa-magnifying-glass me-1"></i> Student Search</label>
+                <label class="form-label fw-bold text-success"><i class="fa-solid fa-magnifying-glass me-1"></i> Quick Search</label>
                 <input type="text" id="searchInput" class="form-control" placeholder="Enter Name, ID, or Roll No..." onkeyup="applyFilter()">
             </div>
             <div class="col-md-2">
@@ -100,25 +108,25 @@
         </div>
     </div>
 
-    <!-- Individual Student Monthly Tracker Section (Dropdown Based) -->
+    <!-- Individual Student Monthly Tracker Section -->
     <div class="tracker-card">
-        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-user-shield me-2"></i>Individual Student Monthly Attendance Tracker</h6>
+        <h5 class="fw-bold text-success mb-3"><i class="fa-solid fa-user-clock me-2"></i>Individual Student Monthly Attendance Tracker</h5>
         <div class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label class="form-label fw-bold small">Select Class</label>
-                <select id="trackerClass" class="form-select form-select-sm" onchange="onTrackerClassChange()">
+                <label class="form-label fw-bold small">1. Select Class</label>
+                <select id="trackerClass" class="form-select" onchange="onTrackerClassChange()">
                     <option value="">Choose Class</option>
                 </select>
             </div>
             <div class="col-md-6">
-                <label class="form-label fw-bold small">Select Student</label>
-                <select id="trackerStudent" class="form-select form-select-sm">
+                <label class="form-label fw-bold small">2. Select Student</label>
+                <select id="trackerStudent" class="form-select">
                     <option value="">Choose Class First</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <button class="btn btn-success btn-sm w-100 fw-bold" onclick="trackIndividualStudent()">
-                    <i class="fa-solid fa-chart-line me-1"></i> Track
+                <button class="btn btn-success w-100 fw-bold" onclick="trackIndividualStudent()">
+                    <i class="fa-solid fa-chart-pie me-1"></i> View Report
                 </button>
             </div>
         </div>
@@ -161,6 +169,9 @@
         </div>
     </div>
 
+    <!-- Student Profile & Summary Box (Hidden by default) -->
+    <div id="studentProfileSection" style="display: none;"></div>
+
     <!-- Data Table -->
     <div class="table-card">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -189,6 +200,7 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwcqbMH6wEW3isFRMiMsPiebUL4_uALKBXy-7elBKpjs0XolIySjq5mO_-KsuSGHAVUKA/exec";
     let rawRecords = [];
+    let allClassNames = [];
 
     window.addEventListener('DOMContentLoaded', () => {
         // Default date set to Today (YYYY-MM-DD)
@@ -207,6 +219,7 @@
             .then(data => {
                 if (data && data.records) {
                     rawRecords = data.records;
+                    allClassNames = data.classList;
                     
                     // Populate Class Dropdowns
                     const classSelect = document.getElementById('classFilter');
@@ -214,12 +227,12 @@
                     classSelect.innerHTML = '<option value="">All Classes</option>';
                     trackerClassSelect.innerHTML = '<option value="">Choose Class</option>';
 
-                    data.classList.forEach(cls => {
+                    allClassNames.forEach(cls => {
                         classSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
                         trackerClassSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
                     });
 
-                    document.getElementById('activeClasses').innerText = data.classList.length;
+                    document.getElementById('activeClasses').innerText = allClassNames.length;
                     applyFilter(); // Initial filter apply for today's date
                 }
             })
@@ -241,7 +254,7 @@
 
         rawRecords.forEach(r => {
             if (String(r.className).trim().toLowerCase() === selectedClass) {
-                const identifier = r.studentId || r.rollNo || r.name;
+                const identifier = (r.studentId || '') + '_' + (r.rollNo || '');
                 if (!seen.has(identifier)) {
                     seen.add(identifier);
                     uniqueStudents.push({
@@ -253,9 +266,14 @@
             }
         });
 
+        // Sort by Roll No if possible
+        uniqueStudents.sort((a, b) => Number(a.roll) - Number(b.roll));
+
         uniqueStudents.forEach(s => {
             const opt = document.createElement('option');
-            opt.value = s.name; // Student name ya ID se match karne ke liye
+            opt.value = s.name; 
+            opt.setAttribute('data-id', s.id);
+            opt.setAttribute('data-roll', s.roll);
             opt.innerText = `${s.name} (Roll: ${s.roll}, ID: ${s.id})`;
             studentSelect.appendChild(opt);
         });
@@ -289,6 +307,9 @@
     }
 
     function applyFilter() {
+        // Hide individual student profile box when using general filters
+        document.getElementById('studentProfileSection').style.display = 'none';
+
         const selectedClass = document.getElementById('classFilter').value.toLowerCase().trim();
         const selectedDateRaw = document.getElementById('dateFilter').value; // yyyy-mm-dd
         const query = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -319,22 +340,55 @@
         renderTable(filtered, "Attendance Report");
     }
 
+    // Individual Student Monthly Track Report
     function trackIndividualStudent() {
-        const cls = document.getElementById('trackerClass').value.toLowerCase().trim();
-        const studentName = document.getElementById('trackerStudent').value.trim();
+        const cls = document.getElementById('trackerClass').value.trim();
+        const studentSelect = document.getElementById('trackerStudent');
+        const studentName = studentSelect.value.trim();
 
         if (!cls || !studentName) {
             Swal.fire('Warning', 'Kripya Class aur Student dono select karein!', 'warning');
             return;
         }
 
-        const filtered = rawRecords.filter(r => {
-            const matchClass = String(r.className).toLowerCase().trim() === cls;
-            const matchStudent = String(r.name).trim().toLowerCase() === studentName.toLowerCase();
-            return matchClass && matchStudent;
+        const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+        const studentId = selectedOption.getAttribute('data-id');
+        const rollNo = selectedOption.getAttribute('data-roll');
+
+        // Filter all records for this student across all dates (Monthly View)
+        const studentRecords = rawRecords.filter(r => {
+            const matchClass = String(r.className).trim().toLowerCase() === cls.toLowerCase();
+            const matchName = String(r.name).trim().toLowerCase() === studentName.toLowerCase();
+            return matchClass && matchName;
         });
 
-        renderTable(filtered, `Monthly Attendance Report for: ${studentName}`);
+        // Sort records by date descending or ascending
+        studentRecords.sort((a, b) => {
+            const partsA = a.date.split('/');
+            const partsB = b.date.split('/');
+            return new Date(partsB[2], partsB[1]-1, partsB[0]) - new Date(partsA[2], partsA[1]-1, partsA[0]);
+        });
+
+        // Display Student Profile & Summary Box
+        const profileSection = document.getElementById('studentProfileSection');
+        profileSection.style.display = 'block';
+        profileSection.innerHTML = `
+            <div class="student-profile-box">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="fw-bold text-success mb-1"><i class="fa-solid fa-user-graduate me-2"></i>${studentName}</h5>
+                        <p class="mb-0 text-muted small">
+                            Class: <b>${cls}</b> &nbsp;|&nbsp; Roll No: <b>${rollNo || '-'}</b> &nbsp;|&nbsp; Student ID: <b>${studentId || '-'}</b>
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                        <span class="badge bg-success p-2 fs-6">Total Present Days: ${studentRecords.length}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        renderTable(studentRecords, `Monthly Attendance Report: ${studentName}`);
     }
 
     function resetFilters() {
@@ -348,6 +402,7 @@
         document.getElementById('searchInput').value = '';
         document.getElementById('trackerClass').value = '';
         document.getElementById('trackerStudent').innerHTML = '<option value="">Choose Class First</option>';
+        document.getElementById('studentProfileSection').style.display = 'none';
         applyFilter();
     }
 </script>
