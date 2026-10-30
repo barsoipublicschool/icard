@@ -53,15 +53,11 @@
         width: 100% !important;
         border-radius: 10px;
         object-fit: cover;
+        /* Video mirror issue fix for Front Camera */
+        transform: scaleX(1) !important;
     }
-    #reader__dashboard_section_csr button {
-        background-color: #198754 !important;
-        color: white !important;
-        border: none !important;
-        padding: 8px 16px !important;
-        border-radius: 8px !important;
-        font-weight: bold !important;
-        margin-top: 10px !important;
+    .camera-select {
+        margin-bottom: 15px;
     }
     .footer-note {
         font-size: 0.85rem;
@@ -77,6 +73,13 @@
         <h2 class="header-title"><i class="fa-solid fa-graduation-cap me-2"></i>BARSOI PUBLIC SCHOOL</h2>
         <p class="sub-title"><i class="fa-solid fa-qrcode me-1"></i> Students' Attendance Scanner</p>
         
+        <!-- Camera selection dropdown for Front/Back switching -->
+        <div class="camera-select mb-3">
+            <select id="cameraSelection" class="form-select border-success fw-bold" onchange="changeCamera()">
+                <option value="">Select Camera...</option>
+            </select>
+        </div>
+
         <!-- Full / Responsive Camera View -->
         <div id="reader"></div>
 
@@ -87,12 +90,72 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbz4ST4RCzKbLGUMsXCH8_JHljLfe30vGEk_L7aqjRWfH6MyJ5UD0ilXYj4lwWANiQQKWQ/exec";
 
-    let html5QrcodeScanner;
+    let html5QrCode;
+    let currentCameraId = null;
+
+    function initScanner() {
+        html5QrCode = new Html5Qrcode("reader");
+
+        // Camera devices list karna
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                const cameraSelect = document.getElementById('cameraSelection');
+                cameraSelect.innerHTML = '';
+
+                devices.forEach((device, index) => {
+                    const option = document.createElement('option');
+                    option.value = device.id;
+                    option.text = device.label || `Camera ${index + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+
+                // Default selection (Back camera if available, else first camera)
+                let selectedCam = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment'));
+                currentCameraId = selectedCam ? selectedCam.id : devices[0].id;
+                cameraSelect.value = currentCameraId;
+
+                startScanning(currentCameraId);
+            } else {
+                Swal.fire('Error', 'No camera found on this device!', 'error');
+            }
+        }).catch(err => {
+            console.error("Camera access error: ", err);
+        });
+    }
+
+    function startScanning(cameraId) {
+        const config = {
+            fps: 25,
+            qrbox: { width: 280, height: 280 },
+            aspectRatio: 1.0,
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+            }
+        };
+
+        html5QrCode.start(
+            cameraId, 
+            config, 
+            onScanSuccess
+        ).catch(err => {
+            console.error("Unable to start scanning", err);
+        });
+    }
+
+    function changeCamera() {
+        const selectedCam = document.getElementById('cameraSelection').value;
+        if (html5QrCode && selectedCam !== currentCameraId) {
+            html5QrCode.stop().then(() => {
+                currentCameraId = selectedCam;
+                startScanning(currentCameraId);
+            }).catch(err => console.error("Error stopping camera", err));
+        }
+    }
 
     function onScanSuccess(decodedText) {
         try {
             let data = JSON.parse(decodedText);
-            html5QrcodeScanner.clear().then(() => {
+            html5QrCode.stop().then(() => {
                 markAttendance(data);
             });
         } catch (e) {
@@ -152,14 +215,14 @@
     }
 
     function restartScanner() {
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 20, 
-            qrbox: { width: 300, height: 300 } 
-        });
-        html5QrcodeScanner.render(onScanSuccess);
+        if (currentCameraId) {
+            startScanning(currentCameraId);
+        } else {
+            initScanner();
+        }
     }
 
-    document.addEventListener("DOMContentLoaded", restartScanner);
+    document.addEventListener("DOMContentLoaded", initScanner);
 </script>
 </body>
 </html>
