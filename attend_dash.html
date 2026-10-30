@@ -241,4 +241,115 @@
 
         rawRecords.forEach(r => {
             if (String(r.className).trim().toLowerCase() === selectedClass) {
-                const identifier
+                const identifier = r.studentId || r.rollNo || r.name;
+                if (!seen.has(identifier)) {
+                    seen.add(identifier);
+                    uniqueStudents.push({
+                        id: r.studentId || '-',
+                        roll: r.rollNo || '',
+                        name: r.name || ''
+                    });
+                }
+            }
+        });
+
+        uniqueStudents.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.name; // Student name ya ID se match karne ke liye
+            opt.innerText = `${s.name} (Roll: ${s.roll}, ID: ${s.id})`;
+            studentSelect.appendChild(opt);
+        });
+    }
+
+    function renderTable(dataList, titleText = "Attendance Report") {
+        const tbody = document.getElementById('tableBody');
+        document.getElementById('presentCount').innerText = dataList.length;
+        document.getElementById('tableTitle').innerHTML = `<i class="fa-solid fa-list me-2"></i>${titleText} (${dataList.length} records)`;
+
+        if (dataList.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No attendance logs found matching filters.</td></tr>`;
+            return;
+        }
+
+        let rows = '';
+        dataList.forEach(item => {
+            const isPresent = String(item.status).toLowerCase() === 'present';
+            rows += `
+                <tr>
+                    <td><i class="fa-regular fa-clock text-muted me-1"></i><b>${item.date}</b></td>
+                    <td><span class="badge bg-light text-dark border">${item.studentId || '-'}</span></td>
+                    <td>${item.rollNo}</td>
+                    <td><span class="fw-bold text-success">${item.className}</span></td>
+                    <td class="fw-bold">${item.name}</td>
+                    <td><span class="${isPresent ? 'badge-present' : 'badge-absent'}">${item.status}</span></td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = rows;
+    }
+
+    function applyFilter() {
+        const selectedClass = document.getElementById('classFilter').value.toLowerCase().trim();
+        const selectedDateRaw = document.getElementById('dateFilter').value; // yyyy-mm-dd
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+        let formattedDate = "";
+        if (selectedDateRaw) {
+            const parts = selectedDateRaw.split('-');
+            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // Convert to dd/mm/yyyy
+        }
+
+        const filtered = rawRecords.filter(r => {
+            const matchClass = !selectedClass || String(r.className).toLowerCase().trim() === selectedClass;
+            const matchDate = !formattedDate || String(r.date).trim() === formattedDate;
+            const matchQuery = !query || 
+                String(r.name).toLowerCase().includes(query) || 
+                String(r.studentId).toLowerCase().includes(query) || 
+                String(r.rollNo).toLowerCase().includes(query);
+
+            return matchClass && matchDate && matchQuery;
+        });
+
+        // Today's total count for stat card
+        const todayObj = new Date();
+        const todayStr = `${String(todayObj.getDate()).padStart(2, '0')}/${String(todayObj.getMonth() + 1).padStart(2, '0')}/${todayObj.getFullYear()}`;
+        const todaysTotal = rawRecords.filter(r => String(r.date).trim() === todayStr).length;
+        document.getElementById('totalCount').innerText = todaysTotal;
+
+        renderTable(filtered, "Attendance Report");
+    }
+
+    function trackIndividualStudent() {
+        const cls = document.getElementById('trackerClass').value.toLowerCase().trim();
+        const studentName = document.getElementById('trackerStudent').value.trim();
+
+        if (!cls || !studentName) {
+            Swal.fire('Warning', 'Kripya Class aur Student dono select karein!', 'warning');
+            return;
+        }
+
+        const filtered = rawRecords.filter(r => {
+            const matchClass = String(r.className).toLowerCase().trim() === cls;
+            const matchStudent = String(r.name).trim().toLowerCase() === studentName.toLowerCase();
+            return matchClass && matchStudent;
+        });
+
+        renderTable(filtered, `Monthly Attendance Report for: ${studentName}`);
+    }
+
+    function resetFilters() {
+        const todayObj = new Date();
+        const yyyy = todayObj.getFullYear();
+        const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(todayObj.getDate()).padStart(2, '0');
+        document.getElementById('dateFilter').value = `${yyyy}-${mm}-${dd}`;
+
+        document.getElementById('classFilter').value = '';
+        document.getElementById('searchInput').value = '';
+        document.getElementById('trackerClass').value = '';
+        document.getElementById('trackerStudent').innerHTML = '<option value="">Choose Class First</option>';
+        applyFilter();
+    }
+</script>
+</body>
+</html>
